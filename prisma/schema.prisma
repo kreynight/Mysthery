@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Drop {
+  id                     String    @id @default(uuid())
+  name                   String
+  slug                   String    @unique
+  price                  Int       // cents
+  images                 String[]  // URLs
+  vibeLine               String?   // 6-10 word vibe line
+  effectType             String?   // Calming / Energizing / Balancing / Neutral
+  caffeine               String?   // Yes / No / MayContain / Unknown
+  tastingNotes           String?
+  ingredientMayInclude   String?   // comma-separated families
+  steepGuide             String?   // e.g. "200°F / 3-5 min"
+  allergenNote           String?
+  dropNotes              String?   // batch date / vibe
+  batchQuantityTotal     Int
+  batchQuantityRemaining Int
+  dropStartDate          DateTime?
+  isActive               Boolean   @default(true)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  orders                 Order[]
+}
+
+model Order {
+  id              String   @id @default(uuid())
+  dropId          String
+  drop            Drop     @relation(fields: [dropId], references: [id])
+  quantity        Int      @default(1)
+  email           String?
+  stripeSessionId String   @unique
+  stripePaymentId String?
+  status          String   @default("pending") // pending, paid, failed, review
+  totalAmount     Int      // cents
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model InventoryIngredient {
+  id        String   @id @default(uuid())
+  name      String
+  category  String?  // herb, spice, tea, flower, fruit, root, bark
+  origin    String?
+  notes     String?
+  inStock   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
