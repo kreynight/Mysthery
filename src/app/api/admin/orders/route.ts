@@ -7,10 +7,13 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const orders = await prisma.order.findMany({
-    include: { drop: { select: { name: true, slug: true } } },
-    orderBy: { createdAt: "desc" },
-  });
-
-  return NextResponse.json(orders);
+  try {
+    const orders = await prisma.order.findMany({
+      include: { drop: { select: { name: true, slug: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json(orders);
+  } catch {
+    return NextResponse.json([]);
+  }
 }

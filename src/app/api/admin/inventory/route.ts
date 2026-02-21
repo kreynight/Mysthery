@@ -7,11 +7,14 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const ingredients = await prisma.inventoryIngredient.findMany({
-    orderBy: { name: "asc" },
-  });
-
-  return NextResponse.json(ingredients);
+  try {
+    const ingredients = await prisma.inventoryIngredient.findMany({
+      orderBy: { name: "asc" },
+    });
+    return NextResponse.json(ingredients);
+  } catch {
+    return NextResponse.json([]);
+  }
 }
 
 export async function POST(req: NextRequest) {

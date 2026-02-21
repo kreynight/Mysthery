@@ -13,7 +13,13 @@ interface PageProps {
 
 export default async function DropPage({ params }: PageProps) {
   const { slug } = await params;
-  const drop = await prisma.drop.findUnique({ where: { slug } });
+
+  let drop;
+  try {
+    drop = await prisma.drop.findUnique({ where: { slug } });
+  } catch {
+    notFound();
+  }
 
   if (!drop || !drop.isActive) notFound();
 

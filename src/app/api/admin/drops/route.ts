@@ -7,8 +7,12 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const drops = await prisma.drop.findMany({ orderBy: { createdAt: "desc" } });
-  return NextResponse.json(drops);
+  try {
+    const drops = await prisma.drop.findMany({ orderBy: { createdAt: "desc" } });
+    return NextResponse.json(drops);
+  } catch {
+    return NextResponse.json([]);
+  }
 }
 
 export async function POST(req: NextRequest) {
