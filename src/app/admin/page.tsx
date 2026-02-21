@@ -8,9 +8,10 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(true);
+  const [seedStatus, setSeedStatus] = useState("");
+  const [setupStatus, setSetupStatus] = useState("");
 
   useEffect(() => {
-    // Check if already authenticated by trying to fetch drops
     fetch("/api/admin/drops")
       .then((r) => {
         if (r.ok) setLoggedIn(true);
@@ -37,6 +38,37 @@ export default function AdminPage() {
     await fetch("/api/admin/auth", { method: "DELETE" });
     setLoggedIn(false);
     setPassword("");
+  };
+
+  const handleSetup = async () => {
+    setSetupStatus("Creating tables...");
+    try {
+      const res = await fetch("/api/admin/setup", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setSetupStatus(data.message || "Tables created successfully.");
+      } else {
+        setSetupStatus(`Error: ${data.error}`);
+      }
+    } catch {
+      setSetupStatus("Failed to connect. Check your DATABASE_URL.");
+    }
+  };
+
+  const handleSeed = async () => {
+    if (!confirm("This will clear all existing drops, orders, and ingredients, then add sample data. Continue?")) return;
+    setSeedStatus("Seeding...");
+    try {
+      const res = await fetch("/api/admin/seed", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setSeedStatus(data.message || "Seeded successfully.");
+      } else {
+        setSeedStatus(`Error: ${data.error}`);
+      }
+    } catch {
+      setSeedStatus("Failed to seed.");
+    }
   };
 
   if (checking) {
@@ -108,6 +140,41 @@ export default function AdminPage() {
           <h2 className="text-sm font-medium text-neutral-900 mb-1">Inventory</h2>
           <p className="text-xs text-neutral-400">Manage ingredient inventory</p>
         </Link>
+      </div>
+
+      {/* Setup & Seed section */}
+      <div className="mt-10 border-t border-neutral-100 pt-8">
+        <p className="text-xs tracking-[0.3em] uppercase text-neutral-400 mb-4">
+          First-Time Setup
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={handleSetup}
+            className="px-5 py-2.5 text-xs tracking-widest uppercase border border-neutral-300 hover:border-neutral-500 transition-colors"
+          >
+            Create Database Tables
+          </button>
+          <button
+            onClick={handleSeed}
+            className="px-5 py-2.5 text-xs tracking-widest uppercase border border-neutral-300 hover:border-neutral-500 transition-colors"
+          >
+            Load Sample Data
+          </button>
+        </div>
+        {setupStatus && (
+          <p className={`text-xs mt-3 ${setupStatus.startsWith("Error") ? "text-red-600" : "text-green-700"}`}>
+            {setupStatus}
+          </p>
+        )}
+        {seedStatus && (
+          <p className={`text-xs mt-3 ${seedStatus.startsWith("Error") ? "text-red-600" : "text-green-700"}`}>
+            {seedStatus}
+          </p>
+        )}
+        <p className="text-[10px] text-neutral-400 mt-3">
+          &ldquo;Create Database Tables&rdquo; sets up the database schema. Only needed once after first deploy.
+          &ldquo;Load Sample Data&rdquo; adds 3 demo drops and 10 ingredients (clears existing data first).
+        </p>
       </div>
 
       <div className="mt-6">

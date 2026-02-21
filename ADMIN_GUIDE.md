@@ -1,13 +1,23 @@
 # Mysthery — Admin Guide
 
-This guide explains how to use the admin panel to manage your tea drops, view orders, and manage inventory.
+This guide explains how to use the admin panel to manage your tea drops, view orders, and manage inventory. No terminal or coding required — everything is done from your browser.
+
+---
+
+## First-Time Setup (After Deploy)
+
+1. Go to `your-site.com/admin`
+2. Log in with your `ADMIN_PASSWORD`
+3. Click **"Create Database Tables"** — this sets up your database (only needed once)
+4. Click **"Load Sample Data"** — this adds 3 demo drops and 10 ingredients so you can see how the site looks
+5. Visit your homepage to see the sample drops
 
 ---
 
 ## Logging In
 
 1. Go to `your-site.com/admin`
-2. Enter the password you set in your `ADMIN_PASSWORD` environment variable
+2. Enter the password you set in the `ADMIN_PASSWORD` environment variable on Vercel
 3. You'll see the dashboard with three sections: Drops, Orders, and Inventory
 
 ---
@@ -79,7 +89,7 @@ The inventory section lets you start building your ingredient library. This is a
 
 1. Go to **Admin** → **Inventory**
 2. Click **Add Ingredient** to add a new ingredient with name, category, origin, and notes
-3. The seed script adds 10 sample ingredients
+3. The "Load Sample Data" button on the dashboard adds 10 sample ingredients
 
 ---
 
