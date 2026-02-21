@@ -9,12 +9,12 @@ export default function NewDropPage() {
       <div className="mb-8">
         <Link
           href="/admin/drops"
-          className="text-xs text-neutral-400 hover:text-neutral-900 transition-colors"
+          className="text-xs text-stone-400 hover:text-stone-800 transition-colors"
         >
           &larr; Back to drops
         </Link>
       </div>
-      <h1 className="text-xl font-light tracking-wide text-neutral-900 mb-8">New Drop</h1>
+      <h1 className="text-xl font-light tracking-wide text-stone-800 mb-8">New Drop</h1>
       <DropForm />
     </div>
   );

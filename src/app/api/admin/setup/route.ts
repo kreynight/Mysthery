@@ -8,7 +8,6 @@ export async function POST() {
   }
 
   try {
-    // Create tables using raw SQL — equivalent to `prisma db push`
     await prisma.$executeRawUnsafe(`
       CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
@@ -60,15 +59,26 @@ export async function POST() {
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS "InventoryIngredient" (
         "id" TEXT NOT NULL DEFAULT gen_random_uuid()::text,
+        "inventoryNo" INTEGER,
         "name" TEXT NOT NULL,
+        "brand" TEXT,
+        "teaNumber" TEXT,
         "category" TEXT,
-        "origin" TEXT,
+        "ingredientsKey" TEXT,
+        "flavorNotes" TEXT,
+        "wellnessFunction" TEXT,
+        "caffeineLevel" TEXT,
+        "culturalRoots" TEXT,
+        "format" TEXT,
+        "verificationLevel" TEXT,
         "notes" TEXT,
         "inStock" BOOLEAN NOT NULL DEFAULT true,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT "InventoryIngredient_pkey" PRIMARY KEY ("id")
       );
+
+      CREATE UNIQUE INDEX IF NOT EXISTS "InventoryIngredient_inventoryNo_key" ON "InventoryIngredient"("inventoryNo");
     `);
 
     return NextResponse.json({

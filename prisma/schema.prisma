@@ -45,12 +45,21 @@ model Order {
 }
 
 model InventoryIngredient {
-  id        String   @id @default(uuid())
-  name      String
-  category  String?  // herb, spice, tea, flower, fruit, root, bark
-  origin    String?
-  notes     String?
-  inStock   Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String   @id @default(uuid())
+  inventoryNo       Int?     @unique
+  name              String
+  brand             String?
+  teaNumber         String?
+  category          String?  // type column: herbal, black tea, green tea, etc.
+  ingredientsKey    String?  // known ingredients or VERIFY_ON_PACK / UNKNOWN
+  flavorNotes       String?
+  wellnessFunction  String?
+  caffeineLevel     String?  // None, Low, Medium, High, Decaf, VERIFY_ON_PACK
+  culturalRoots     String?
+  format            String?  // packaging format
+  verificationLevel String?  // THREAD_LOG, ASSUMED_PARTIAL
+  notes             String?
+  inStock           Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }

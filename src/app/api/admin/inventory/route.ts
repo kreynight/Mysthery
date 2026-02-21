@@ -9,7 +9,7 @@ export async function GET() {
 
   try {
     const ingredients = await prisma.inventoryIngredient.findMany({
-      orderBy: { name: "asc" },
+      orderBy: { inventoryNo: "asc" },
     });
     return NextResponse.json(ingredients);
   } catch {
@@ -28,8 +28,16 @@ export async function POST(req: NextRequest) {
     const ingredient = await prisma.inventoryIngredient.create({
       data: {
         name: data.name,
+        brand: data.brand || null,
+        teaNumber: data.teaNumber || null,
         category: data.category || null,
-        origin: data.origin || null,
+        ingredientsKey: data.ingredientsKey || null,
+        flavorNotes: data.flavorNotes || null,
+        wellnessFunction: data.wellnessFunction || null,
+        caffeineLevel: data.caffeineLevel || null,
+        culturalRoots: data.culturalRoots || null,
+        format: data.format || null,
+        verificationLevel: data.verificationLevel || null,
         notes: data.notes || null,
         inStock: data.inStock ?? true,
       },
@@ -39,5 +47,26 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Create ingredient error:", error);
     return NextResponse.json({ error: "Failed to create ingredient." }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  if (!(await isAdminAuthenticated())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const data = await req.json();
+    const { id, ...fields } = data;
+
+    const ingredient = await prisma.inventoryIngredient.update({
+      where: { id },
+      data: fields,
+    });
+
+    return NextResponse.json(ingredient);
+  } catch (error) {
+    console.error("Update ingredient error:", error);
+    return NextResponse.json({ error: "Failed to update ingredient." }, { status: 500 });
   }
 }

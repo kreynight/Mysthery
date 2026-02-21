@@ -29,7 +29,7 @@ export default function EditDropPage({ params }: EditDropPageProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-neutral-400 text-sm">Loading...</p>
+        <p className="text-stone-400 text-sm">Loading...</p>
       </div>
     );
   }
@@ -62,12 +62,12 @@ export default function EditDropPage({ params }: EditDropPageProps) {
       <div className="mb-8">
         <Link
           href="/admin/drops"
-          className="text-xs text-neutral-400 hover:text-neutral-900 transition-colors"
+          className="text-xs text-stone-400 hover:text-stone-800 transition-colors"
         >
           &larr; Back to drops
         </Link>
       </div>
-      <h1 className="text-xl font-light tracking-wide text-neutral-900 mb-8">
+      <h1 className="text-xl font-light tracking-wide text-stone-800 mb-8">
         Edit: {drop.name as string}
       </h1>
       <DropForm initial={initial} dropId={id} />

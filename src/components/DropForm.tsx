@@ -125,7 +125,7 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
       {/* Name + Slug */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs tracking-wide uppercase text-neutral-500 mb-1">
+          <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
             Name *
           </label>
           <input
@@ -136,11 +136,11 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
               set("name", e.target.value);
               if (!isEdit) set("slug", autoSlug(e.target.value));
             }}
-            className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+            className="w-full border border-stone-300 px-3 py-2.5 text-sm"
           />
         </div>
         <div>
-          <label className="block text-xs tracking-wide uppercase text-neutral-500 mb-1">
+          <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
             Slug *
           </label>
           <input
@@ -148,7 +148,7 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
             required
             value={form.slug}
             onChange={(e) => set("slug", e.target.value)}
-            className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+            className="w-full border border-stone-300 px-3 py-2.5 text-sm"
           />
         </div>
       </div>
@@ -156,7 +156,7 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
       {/* Price + Quantity */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label className="block text-xs tracking-wide uppercase text-neutral-500 mb-1">
+          <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
             Price (USD) *
           </label>
           <input
@@ -166,12 +166,12 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
             required
             value={form.price}
             onChange={(e) => set("price", e.target.value)}
-            className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+            className="w-full border border-stone-300 px-3 py-2.5 text-sm"
             placeholder="12.00"
           />
         </div>
         <div>
-          <label className="block text-xs tracking-wide uppercase text-neutral-500 mb-1">
+          <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
             Batch Total *
           </label>
           <input
@@ -183,12 +183,12 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
               set("batchQuantityTotal", e.target.value);
               if (!isEdit) set("batchQuantityRemaining", e.target.value);
             }}
-            className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+            className="w-full border border-stone-300 px-3 py-2.5 text-sm"
           />
         </div>
         {isEdit && (
           <div>
-            <label className="block text-xs tracking-wide uppercase text-neutral-500 mb-1">
+            <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
               Remaining
             </label>
             <input
@@ -196,7 +196,7 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
               min="0"
               value={form.batchQuantityRemaining}
               onChange={(e) => set("batchQuantityRemaining", e.target.value)}
-              className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+              className="w-full border border-stone-300 px-3 py-2.5 text-sm"
             />
           </div>
         )}
@@ -204,21 +204,21 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
 
       {/* Vibe Line */}
       <div>
-        <label className="block text-xs tracking-wide uppercase text-neutral-500 mb-1">
+        <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
           Vibe Line (6-10 words)
         </label>
         <input
           type="text"
           value={form.vibeLine}
           onChange={(e) => set("vibeLine", e.target.value)}
-          className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+          className="w-full border border-stone-300 px-3 py-2.5 text-sm"
           placeholder="A quiet evening in a warm cup."
         />
       </div>
 
       {/* Images */}
       <div>
-        <label className="block text-xs tracking-wide uppercase text-neutral-500 mb-1">
+        <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
           Image URLs
         </label>
         <div className="flex gap-2 mb-2">
@@ -226,13 +226,13 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
             type="url"
             value={imageInput}
             onChange={(e) => setImageInput(e.target.value)}
-            className="flex-1 border border-neutral-300 px-3 py-2.5 text-sm"
+            className="flex-1 border border-stone-300 px-3 py-2.5 text-sm"
             placeholder="https://..."
           />
           <button
             type="button"
             onClick={addImage}
-            className="px-4 py-2.5 bg-neutral-900 text-white text-xs tracking-wide uppercase hover:bg-neutral-800"
+            className="px-4 py-2.5 bg-[#3d4a3a] text-white text-xs tracking-wide uppercase hover:bg-[#2f3a2d]"
           >
             Add
           </button>
@@ -242,7 +242,7 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
             {form.images.map((img, i) => (
               <div
                 key={i}
-                className="flex items-center gap-2 text-xs text-neutral-500 bg-neutral-50 px-2 py-1.5"
+                className="flex items-center gap-2 text-xs text-stone-500 bg-stone-50 px-2 py-1.5"
               >
                 <span className="truncate flex-1">{img}</span>
                 <button
@@ -261,13 +261,13 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
       {/* Effect + Caffeine */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs tracking-wide uppercase text-neutral-500 mb-1">
+          <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
             Effect Type
           </label>
           <select
             value={form.effectType}
             onChange={(e) => set("effectType", e.target.value)}
-            className="w-full border border-neutral-300 px-3 py-2.5 text-sm bg-white"
+            className="w-full border border-stone-300 px-3 py-2.5 text-sm bg-transparent"
           >
             <option value="">Select...</option>
             {EFFECT_TYPES.map((t) => (
@@ -278,13 +278,13 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
           </select>
         </div>
         <div>
-          <label className="block text-xs tracking-wide uppercase text-neutral-500 mb-1">
+          <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
             Caffeine
           </label>
           <select
             value={form.caffeine}
             onChange={(e) => set("caffeine", e.target.value)}
-            className="w-full border border-neutral-300 px-3 py-2.5 text-sm bg-white"
+            className="w-full border border-stone-300 px-3 py-2.5 text-sm bg-transparent"
           >
             <option value="">Select...</option>
             {CAFFEINE_OPTIONS.map((c) => (
@@ -298,84 +298,84 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
 
       {/* Tasting Notes */}
       <div>
-        <label className="block text-xs tracking-wide uppercase text-neutral-500 mb-1">
+        <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
           Tasting Notes
         </label>
         <input
           type="text"
           value={form.tastingNotes}
           onChange={(e) => set("tastingNotes", e.target.value)}
-          className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+          className="w-full border border-stone-300 px-3 py-2.5 text-sm"
           placeholder="Earthy, floral, hint of citrus"
         />
       </div>
 
       {/* Ingredient May Include */}
       <div>
-        <label className="block text-xs tracking-wide uppercase text-neutral-500 mb-1">
+        <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
           May Include (ingredient families)
         </label>
         <input
           type="text"
           value={form.ingredientMayInclude}
           onChange={(e) => set("ingredientMayInclude", e.target.value)}
-          className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+          className="w-full border border-stone-300 px-3 py-2.5 text-sm"
           placeholder="Green teas, herbs, dried flowers"
         />
       </div>
 
       {/* Steep Guide */}
       <div>
-        <label className="block text-xs tracking-wide uppercase text-neutral-500 mb-1">
+        <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
           Steep Guide
         </label>
         <input
           type="text"
           value={form.steepGuide}
           onChange={(e) => set("steepGuide", e.target.value)}
-          className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+          className="w-full border border-stone-300 px-3 py-2.5 text-sm"
           placeholder="200°F / 3-5 min"
         />
       </div>
 
       {/* Allergen Note */}
       <div>
-        <label className="block text-xs tracking-wide uppercase text-neutral-500 mb-1">
+        <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
           Allergen Note
         </label>
         <input
           type="text"
           value={form.allergenNote}
           onChange={(e) => set("allergenNote", e.target.value)}
-          className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+          className="w-full border border-stone-300 px-3 py-2.5 text-sm"
           placeholder="Processed in a facility that handles nuts and citrus"
         />
       </div>
 
       {/* Drop Notes */}
       <div>
-        <label className="block text-xs tracking-wide uppercase text-neutral-500 mb-1">
+        <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
           Drop Notes
         </label>
         <input
           type="text"
           value={form.dropNotes}
           onChange={(e) => set("dropNotes", e.target.value)}
-          className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+          className="w-full border border-stone-300 px-3 py-2.5 text-sm"
           placeholder="Batch #001 — Spring 2026"
         />
       </div>
 
       {/* Drop Start Date */}
       <div>
-        <label className="block text-xs tracking-wide uppercase text-neutral-500 mb-1">
+        <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
           Drop Start Date
         </label>
         <input
           type="date"
           value={form.dropStartDate}
           onChange={(e) => set("dropStartDate", e.target.value)}
-          className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+          className="w-full border border-stone-300 px-3 py-2.5 text-sm"
         />
       </div>
 
@@ -387,7 +387,7 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
           onChange={(e) => set("isActive", e.target.checked)}
           className="w-4 h-4"
         />
-        <span className="text-sm text-neutral-700">Active (visible on site)</span>
+        <span className="text-sm text-stone-700">Active (visible on site)</span>
       </label>
 
       {/* Submit */}
@@ -395,14 +395,14 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
         <button
           type="submit"
           disabled={saving}
-          className="bg-neutral-900 text-white px-8 py-3 text-xs tracking-widest uppercase hover:bg-neutral-800 transition-colors disabled:opacity-50"
+          className="bg-[#3d4a3a] text-white px-8 py-3 text-xs tracking-widest uppercase hover:bg-[#2f3a2d] transition-colors disabled:opacity-50"
         >
           {saving ? "Saving..." : isEdit ? "Update Drop" : "Create Drop"}
         </button>
         <button
           type="button"
           onClick={() => router.push("/admin/drops")}
-          className="px-8 py-3 text-xs tracking-widest uppercase border border-neutral-200 hover:border-neutral-400 transition-colors"
+          className="px-8 py-3 text-xs tracking-widest uppercase border border-stone-200 hover:border-stone-400 transition-colors"
         >
           Cancel
         </button>

@@ -50,7 +50,7 @@ export default function AdminDropsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-neutral-400 text-sm">Loading...</p>
+        <p className="text-stone-400 text-sm">Loading...</p>
       </div>
     );
   }
@@ -58,34 +58,34 @@ export default function AdminDropsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-xl font-light tracking-wide text-neutral-900">Drops</h1>
+        <h1 className="text-xl font-light tracking-wide text-stone-800">Drops</h1>
         <Link
           href="/admin/drops/new"
-          className="bg-neutral-900 text-white px-5 py-2.5 text-xs tracking-widest uppercase hover:bg-neutral-800 transition-colors"
+          className="bg-[#3d4a3a] text-white px-5 py-2.5 text-xs tracking-widest uppercase hover:bg-[#2f3a2d] transition-colors"
         >
           New Drop
         </Link>
       </div>
 
       {drops.length === 0 ? (
-        <p className="text-sm text-neutral-400">No drops yet.</p>
+        <p className="text-sm text-stone-400">No drops yet.</p>
       ) : (
         <div className="space-y-3">
           {drops.map((drop) => (
             <div
               key={drop.id}
-              className="border border-neutral-200 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+              className="border border-stone-200 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
             >
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span
                     className={`w-2 h-2 rounded-full ${
-                      drop.isActive ? "bg-green-500" : "bg-neutral-300"
+                      drop.isActive ? "bg-green-500" : "bg-stone-300"
                     }`}
                   />
-                  <h2 className="text-sm font-medium text-neutral-900">{drop.name}</h2>
+                  <h2 className="text-sm font-medium text-stone-800">{drop.name}</h2>
                 </div>
-                <p className="text-xs text-neutral-400">
+                <p className="text-xs text-stone-400">
                   ${(drop.price / 100).toFixed(2)} &middot;{" "}
                   {drop.batchQuantityRemaining}/{drop.batchQuantityTotal} remaining
                 </p>
@@ -93,13 +93,13 @@ export default function AdminDropsPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => toggleActive(drop)}
-                  className="text-xs px-3 py-1.5 border border-neutral-200 hover:border-neutral-400 transition-colors"
+                  className="text-xs px-3 py-1.5 border border-stone-200 hover:border-stone-400 transition-colors"
                 >
                   {drop.isActive ? "Deactivate" : "Activate"}
                 </button>
                 <Link
                   href={`/admin/drops/${drop.id}/edit`}
-                  className="text-xs px-3 py-1.5 border border-neutral-200 hover:border-neutral-400 transition-colors"
+                  className="text-xs px-3 py-1.5 border border-stone-200 hover:border-stone-400 transition-colors"
                 >
                   Edit
                 </Link>
@@ -116,7 +116,7 @@ export default function AdminDropsPage() {
       )}
 
       <div className="mt-8">
-        <Link href="/admin" className="text-xs text-neutral-400 hover:text-neutral-900 transition-colors">
+        <Link href="/admin" className="text-xs text-stone-400 hover:text-stone-800 transition-colors">
           &larr; Back to dashboard
         </Link>
       </div>
