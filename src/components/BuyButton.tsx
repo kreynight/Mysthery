@@ -40,11 +40,11 @@ export default function BuyButton({ dropId, price, remaining }: BuyButtonProps) 
     <div className="space-y-4">
       {!soldOut && maxQty > 1 && (
         <div className="flex items-center gap-3">
-          <label className="text-xs tracking-wide uppercase text-neutral-500">Qty</label>
+          <label className="text-xs tracking-wide uppercase text-stone-500">Qty</label>
           <select
             value={quantity}
             onChange={(e) => setQuantity(Number(e.target.value))}
-            className="border border-neutral-300 px-3 py-2 text-sm bg-white"
+            className="border border-stone-300 px-3 py-2 text-sm bg-white"
           >
             {Array.from({ length: maxQty }, (_, i) => i + 1).map((n) => (
               <option key={n} value={n}>
@@ -59,15 +59,15 @@ export default function BuyButton({ dropId, price, remaining }: BuyButtonProps) 
         disabled={soldOut || loading}
         className={`w-full py-3.5 text-sm tracking-widest uppercase transition-colors ${
           soldOut
-            ? "bg-neutral-200 text-neutral-400 cursor-not-allowed"
-            : "bg-neutral-900 text-white hover:bg-neutral-800"
+            ? "bg-stone-200 text-stone-400 cursor-not-allowed"
+            : "bg-[#3d4a3a] text-white hover:bg-[#2f3a2d]"
         }`}
       >
         {loading
           ? "Processing..."
           : soldOut
           ? "Sold Out"
-          : `Buy Now — ${formatPrice(price * quantity)}`}
+          : `Buy Now \u2014 ${formatPrice(price * quantity)}`}
       </button>
     </div>
   );

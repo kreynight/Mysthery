@@ -23,7 +23,7 @@ export default function ProductCard({
 
   return (
     <Link href={`/drop/${slug}`} className="group block">
-      <div className="relative aspect-square bg-neutral-100 overflow-hidden mb-3">
+      <div className="relative aspect-square bg-stone-200/50 overflow-hidden mb-3">
         {image ? (
           <Image
             src={image}
@@ -33,27 +33,27 @@ export default function ProductCard({
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-neutral-300 text-6xl font-light">
+          <div className="w-full h-full flex items-center justify-center text-stone-300 text-6xl font-light">
             ?
           </div>
         )}
         {soldOut && (
-          <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
-            <span className="text-sm tracking-widest uppercase text-neutral-500">Sold Out</span>
+          <div className="absolute inset-0 bg-[#f5f2ed]/70 flex items-center justify-center">
+            <span className="text-sm tracking-widest uppercase text-stone-500">Sold Out</span>
           </div>
         )}
       </div>
-      <h3 className="text-sm font-medium text-neutral-900 mb-1">{name}</h3>
-      <p className="text-sm text-neutral-600 mb-1">{formatPrice(price)}</p>
+      <h3 className="text-sm font-medium text-stone-800 mb-1">{name}</h3>
+      <p className="text-sm text-stone-600 mb-1">{formatPrice(price)}</p>
       <p
         className={`text-xs tracking-wide uppercase ${
-          soldOut ? "text-neutral-400" : remaining <= 5 ? "text-amber-700" : "text-neutral-500"
+          soldOut ? "text-stone-400" : remaining <= 5 ? "text-[#8b6e4e] font-medium" : "text-[#3d4a3a]"
         }`}
       >
         {formatRemaining(remaining)}
       </p>
       {vibeLine && (
-        <p className="text-xs text-neutral-400 mt-1 italic">{vibeLine}</p>
+        <p className="text-xs text-stone-400 mt-1 italic">{vibeLine}</p>
       )}
     </Link>
   );

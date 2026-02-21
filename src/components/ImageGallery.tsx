@@ -13,7 +13,7 @@ export default function ImageGallery({ images, name }: ImageGalleryProps) {
 
   if (images.length === 0) {
     return (
-      <div className="aspect-square bg-neutral-100 flex items-center justify-center text-neutral-300 text-8xl font-light">
+      <div className="aspect-square bg-stone-200/50 flex items-center justify-center text-stone-300 text-8xl font-light">
         ?
       </div>
     );
@@ -21,7 +21,7 @@ export default function ImageGallery({ images, name }: ImageGalleryProps) {
 
   return (
     <div>
-      <div className="relative aspect-square bg-neutral-100 overflow-hidden mb-3">
+      <div className="relative aspect-square bg-stone-200/50 overflow-hidden mb-3">
         <Image
           src={images[selected]}
           alt={`${name} - image ${selected + 1}`}
@@ -37,8 +37,8 @@ export default function ImageGallery({ images, name }: ImageGalleryProps) {
             <button
               key={i}
               onClick={() => setSelected(i)}
-              className={`relative aspect-square bg-neutral-100 overflow-hidden border-2 transition-colors ${
-                i === selected ? "border-neutral-900" : "border-transparent"
+              className={`relative aspect-square bg-stone-200/50 overflow-hidden border-2 transition-colors ${
+                i === selected ? "border-[#3d4a3a]" : "border-transparent"
               }`}
             >
               <Image

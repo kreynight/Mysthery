@@ -6,10 +6,10 @@ export default function AboutPage() {
     <div className="max-w-2xl mx-auto px-4 py-16">
       {/* About the Creator */}
       <section className="mb-16">
-        <p className="text-xs tracking-[0.3em] uppercase text-neutral-400 mb-3">
+        <p className="text-xs tracking-[0.3em] uppercase text-stone-400 mb-3">
           About the Creator
         </p>
-        <div className="space-y-4 text-sm leading-relaxed text-neutral-600">
+        <div className="space-y-4 text-sm leading-relaxed text-stone-600">
           <p>
             {SITE_NAME} started from a simple idea: tea should be an experience, not a routine.
             Each drop is a small-batch mystery blend — curated, intentional, and gone once
@@ -28,10 +28,10 @@ export default function AboutPage() {
 
       {/* Brand Concept */}
       <section className="mb-16">
-        <p className="text-xs tracking-[0.3em] uppercase text-neutral-400 mb-3">
+        <p className="text-xs tracking-[0.3em] uppercase text-stone-400 mb-3">
           The Concept
         </p>
-        <div className="space-y-4 text-sm leading-relaxed text-neutral-600">
+        <div className="space-y-4 text-sm leading-relaxed text-stone-600">
           <p>
             Every {SITE_NAME} drop is a limited run. Once a batch sells out, it&apos;s done.
             Each mystery blend is different — you won&apos;t know exactly what&apos;s inside,

@@ -1,4 +1,4 @@
-export const SITE_NAME = "Mysthery";
+export const SITE_NAME = "Mysthéry";
 export const SITE_TAGLINE = "Mystery tea drops. Limited batches. Curated blends.";
 
 export const DISCLAIMERS = [

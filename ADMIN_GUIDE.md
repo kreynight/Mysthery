@@ -1,4 +1,4 @@
-# Mysthery — Admin Guide
+# Mysthéry — Admin Guide
 
 This guide explains how to use the admin panel to manage your tea drops, view orders, and manage inventory. No terminal or coding required — everything is done from your browser.
 

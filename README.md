@@ -1,4 +1,4 @@
-# Mysthery — Mystery Tea Drops
+# Mysthéry — Mystery Tea Drops
 
 A minimal, influencer-style ecommerce site for limited-batch mystery tea drops. Built with Next.js, Stripe, and Supabase Postgres.
 
@@ -63,7 +63,7 @@ Save this — it's your `STRIPE_SECRET_KEY`.
 1. Make sure this repo is on your GitHub account
 2. Go to [vercel.com](https://vercel.com) and sign up with GitHub
 3. Click **"Add New..."** → **"Project"**
-4. Find and import your **Mysthery** repository
+4. Find and import your **Mysthéry** repository
 5. **Before clicking Deploy**, click **"Environment Variables"** and add these one by one:
 
 | Name | Value |

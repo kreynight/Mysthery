@@ -41,27 +41,27 @@ export default async function DropPage({ params }: PageProps) {
 
         {/* Info */}
         <div className="flex flex-col justify-start">
-          <p className="text-xs tracking-[0.3em] uppercase text-neutral-400 mb-2">
+          <p className="text-xs tracking-[0.3em] uppercase text-stone-400 mb-2">
             Limited Drop
           </p>
-          <h1 className="text-2xl md:text-3xl font-light tracking-wide text-neutral-900 mb-2">
+          <h1 className="text-2xl md:text-3xl font-light tracking-wide text-stone-800 mb-2">
             {drop.name}
           </h1>
           {drop.vibeLine && (
-            <p className="text-sm italic text-neutral-400 mb-4">{drop.vibeLine}</p>
+            <p className="text-sm italic text-stone-400 mb-4">{drop.vibeLine}</p>
           )}
 
           <div className="flex items-baseline gap-4 mb-2">
-            <span className="text-xl text-neutral-900">{formatPrice(drop.price)}</span>
+            <span className="text-xl text-stone-800">{formatPrice(drop.price)}</span>
           </div>
 
           <p
             className={`text-sm tracking-wide uppercase mb-6 ${
               drop.batchQuantityRemaining <= 0
-                ? "text-neutral-400"
+                ? "text-stone-400"
                 : drop.batchQuantityRemaining <= 5
-                ? "text-amber-700 font-medium"
-                : "text-neutral-500"
+                ? "text-[#8b6e4e] font-medium"
+                : "text-[#3d4a3a]"
             }`}
           >
             {formatRemaining(drop.batchQuantityRemaining)}
@@ -75,13 +75,13 @@ export default async function DropPage({ params }: PageProps) {
 
           {/* Detail items */}
           {details.length > 0 && (
-            <div className="mt-10 border-t border-neutral-200 pt-6 space-y-4">
+            <div className="mt-10 border-t border-stone-200 pt-6 space-y-4">
               {details.map((d) => (
                 <div key={d.label} className="flex justify-between text-sm">
-                  <span className="text-neutral-400 uppercase tracking-wide text-xs">
+                  <span className="text-stone-400 uppercase tracking-wide text-xs">
                     {d.label}
                   </span>
-                  <span className="text-neutral-700 text-right max-w-[60%]">{d.value}</span>
+                  <span className="text-stone-700 text-right max-w-[60%]">{d.value}</span>
                 </div>
               ))}
             </div>
