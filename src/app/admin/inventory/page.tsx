@@ -59,6 +59,7 @@ export default function AdminInventoryPage() {
   const [filter, setFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [seedStatus, setSeedStatus] = useState("");
 
   const fetchIngredients = () => {
     fetch("/api/admin/inventory")
@@ -74,6 +75,23 @@ export default function AdminInventoryPage() {
   };
 
   useEffect(fetchIngredients, []);
+
+  const handleSeedFromInventory = async () => {
+    if (!confirm("This will load all 45 ingredients (and 3 demo drops) into the database. Existing data will be replaced. Continue?")) return;
+    setSeedStatus("Loading ingredients...");
+    try {
+      const res = await fetch("/api/admin/seed", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setSeedStatus(data.message || "Loaded successfully.");
+        fetchIngredients();
+      } else {
+        setSeedStatus(`Error: ${data.error}`);
+      }
+    } catch {
+      setSeedStatus("Failed to load. Make sure the database is set up first.");
+    }
+  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -261,11 +279,31 @@ export default function AdminInventoryPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-stone-400 py-8 text-center">
-          {ingredients.length === 0
-            ? "No ingredients yet. Add some or load sample data from the dashboard."
-            : "No ingredients match your search."}
-        </p>
+        ingredients.length === 0 ? (
+          <div className="py-12 text-center space-y-4">
+            <p className="text-sm text-stone-400">
+              No ingredients in the database yet.
+            </p>
+            <button
+              onClick={handleSeedFromInventory}
+              className="bg-[#3d4a3a] text-white px-6 py-3 text-xs tracking-widest uppercase hover:bg-[#2f3a2d] transition-colors"
+            >
+              Load All 45 Ingredients
+            </button>
+            {seedStatus && (
+              <p className={`text-xs mt-2 ${seedStatus.startsWith("Error") || seedStatus.startsWith("Failed") ? "text-red-600" : "text-green-700"}`}>
+                {seedStatus}
+              </p>
+            )}
+            <p className="text-[10px] text-stone-400">
+              Or <Link href="/admin" className="underline hover:text-stone-600">go to the dashboard</Link> for full setup options.
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-stone-400 py-8 text-center">
+            No ingredients match your search.
+          </p>
+        )
       ) : (
         <div className="space-y-1">
           {filtered.map((ing) => (
