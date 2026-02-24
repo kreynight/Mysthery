@@ -5,8 +5,8 @@ import Footer from "@/components/Footer";
 import { SITE_NAME } from "@/lib/constants";
 
 export const metadata: Metadata = {
-  title: `${SITE_NAME} — Mystery Tea Drops`,
-  description: "Limited-batch mystery tea drops. Curated blends, minimal quantities.",
+  title: `${SITE_NAME} | Tea Atelier`,
+  description: "Limited-batch mystery tea collections. Curated blends, minimal quantities.",
 };
 
 export default function RootLayout({

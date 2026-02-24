@@ -83,7 +83,7 @@ export default function AdminOrdersPage() {
                 </div>
                 <div>
                   <span className="text-stone-400">Email: </span>
-                  {order.email || "—"}
+                  {order.email || "N/A"}
                 </div>
                 <div>
                   <span className="text-stone-400">Date: </span>

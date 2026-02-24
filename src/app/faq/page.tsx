@@ -2,8 +2,8 @@ import Disclaimers from "@/components/Disclaimers";
 
 const faqs = [
   {
-    q: "What is a drop?",
-    a: "A drop is a limited-batch release. Each drop has a fixed number of units. Once they're gone, they're gone. Every drop is a unique mystery blend.",
+    q: "What is a collection?",
+    a: "A collection is a limited-batch release. Each collection has a fixed number of units. Once they're gone, they're gone. Every collection is a unique mystery blend.",
   },
   {
     q: 'What does "mystery" mean?',
@@ -11,15 +11,15 @@ const faqs = [
   },
   {
     q: "Does it contain caffeine?",
-    a: 'Each drop listing shows caffeine status: Yes, No, May Contain, or Unknown. Check the product page for specifics. "May Contain" means the blend might include ingredients that naturally contain caffeine.',
+    a: 'Each collection listing shows caffeine status: Yes, No, May Contain, or Unknown. Check the product page for specifics. "May Contain" means the blend might include ingredients that naturally contain caffeine.',
   },
   {
     q: "What about allergens?",
-    a: "All blends are curated from a rotating library of herbs, teas, spices, flowers, and other botanicals. Cross-contact with common allergens (herbs, spices, citrus, etc.) is possible. Check each drop's allergen note for details. If you have known allergies, please consult a healthcare professional before purchasing.",
+    a: "All blends are curated from a rotating library of herbs, teas, spices, flowers, and other botanicals. Cross-contact with common allergens (herbs, spices, citrus, etc.) is possible. Check each collection's allergen note for details. If you have known allergies, please consult a healthcare professional before purchasing.",
   },
   {
     q: "Shipping and returns?",
-    a: "Orders ship within 3–5 business days. Due to the nature of mystery drops and food safety, we cannot accept returns on opened items. If your order arrives damaged, contact us and we'll make it right.",
+    a: "Orders ship within 3-5 business days. Due to the nature of mystery collections and food safety, we cannot accept returns on opened items. If your order arrives damaged, contact us and we'll make it right.",
   },
 ];
 

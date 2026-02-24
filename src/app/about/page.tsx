@@ -12,7 +12,7 @@ export default function AboutPage() {
         <div className="space-y-4 text-sm leading-relaxed text-stone-600">
           <p>
             {SITE_NAME} started from a simple idea: tea should be an experience, not a routine.
-            Each drop is a small-batch mystery blend — curated, intentional, and gone once
+            Each collection is a small-batch mystery blend, curated, intentional, and gone once
             it&apos;s gone.
           </p>
           <p>
@@ -33,8 +33,8 @@ export default function AboutPage() {
         </p>
         <div className="space-y-4 text-sm leading-relaxed text-stone-600">
           <p>
-            Every {SITE_NAME} drop is a limited run. Once a batch sells out, it&apos;s done.
-            Each mystery blend is different — you won&apos;t know exactly what&apos;s inside,
+            Every {SITE_NAME} collection is a limited run. Once a batch sells out, it&apos;s done.
+            Each mystery blend is different. You won&apos;t know exactly what&apos;s inside,
             but you&apos;ll know the general flavor profile, effect, and what ingredient families
             might be present.
           </p>

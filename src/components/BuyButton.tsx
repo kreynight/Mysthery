@@ -67,7 +67,7 @@ export default function BuyButton({ dropId, price, remaining }: BuyButtonProps) 
           ? "Processing..."
           : soldOut
           ? "Sold Out"
-          : `Buy Now \u2014 ${formatPrice(price * quantity)}`}
+          : `Buy Now \u00b7 ${formatPrice(price * quantity)}`}
       </button>
     </div>
   );

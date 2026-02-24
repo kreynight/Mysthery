@@ -7,11 +7,14 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-4 py-10">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 mb-10">
           <div>
-            <p className="text-sm tracking-widest uppercase font-light text-[#3d4a3a] mb-2">
+            <p className="text-sm tracking-widest uppercase font-light text-[#3d4a3a] mb-1">
               {SITE_NAME}
             </p>
+            <p className="text-[9px] tracking-[0.25em] uppercase text-stone-400 mb-2">
+              Tea Atelier
+            </p>
             <p className="text-xs text-stone-400 max-w-xs">
-              Mystery tea drops. Limited batches.
+              Mystery tea collections. Limited batches.
             </p>
           </div>
           <nav className="flex gap-6 text-xs tracking-wide uppercase text-stone-400">

@@ -56,7 +56,7 @@ export default function AdminPage() {
   };
 
   const handleSeed = async () => {
-    if (!confirm("This will clear all existing drops, orders, and ingredients, then add sample data. Continue?")) return;
+    if (!confirm("This will clear all existing collections, orders, and ingredients, then add sample data. Continue?")) return;
     setSeedStatus("Seeding...");
     try {
       const res = await fetch("/api/admin/seed", { method: "POST" });
@@ -123,8 +123,8 @@ export default function AdminPage() {
           href="/admin/drops"
           className="border border-stone-200 p-6 hover:border-stone-400 transition-colors"
         >
-          <h2 className="text-sm font-medium text-stone-800 mb-1">Drops</h2>
-          <p className="text-xs text-stone-400">Create, edit, and manage drops</p>
+          <h2 className="text-sm font-medium text-stone-800 mb-1">Collections</h2>
+          <p className="text-xs text-stone-400">Create, edit, and manage collections</p>
         </Link>
         <Link
           href="/admin/orders"
@@ -138,7 +138,7 @@ export default function AdminPage() {
           className="border border-stone-200 p-6 hover:border-stone-400 transition-colors"
         >
           <h2 className="text-sm font-medium text-stone-800 mb-1">Inventory</h2>
-          <p className="text-xs text-stone-400">Manage 45+ ingredient library</p>
+          <p className="text-xs text-stone-400">Manage ingredient library and edit details</p>
         </Link>
         <Link
           href="/admin/batch-generator"
@@ -180,7 +180,7 @@ export default function AdminPage() {
         )}
         <p className="text-[10px] text-stone-400 mt-3">
           &ldquo;Create Database Tables&rdquo; sets up the database schema. Only needed once after first deploy.
-          &ldquo;Load Sample Data&rdquo; adds 3 demo drops and 45 ingredients (clears existing data first).
+          &ldquo;Load Sample Data&rdquo; adds 3 demo collections and 45 ingredients (clears existing data first).
         </p>
       </div>
 

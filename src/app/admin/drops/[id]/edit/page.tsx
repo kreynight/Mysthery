@@ -64,7 +64,7 @@ export default function EditDropPage({ params }: EditDropPageProps) {
           href="/admin/drops"
           className="text-xs text-stone-400 hover:text-stone-800 transition-colors"
         >
-          &larr; Back to drops
+          &larr; Back to collections
         </Link>
       </div>
       <h1 className="text-xl font-light tracking-wide text-stone-800 mb-8">

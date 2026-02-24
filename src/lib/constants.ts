@@ -1,5 +1,5 @@
-export const SITE_NAME = "Mysthéry";
-export const SITE_TAGLINE = "Mystery tea drops. Limited batches. Curated blends.";
+export const SITE_NAME = "Mysthérie";
+export const SITE_TAGLINE = "Mystery tea collections. Limited batches. Curated blends.";
 
 export const DISCLAIMERS = [
   "Ingredients may vary by batch. Mystery items are curated from a rotating library of herbs, teas, and spices.",
@@ -10,3 +10,5 @@ export const DISCLAIMERS = [
 
 export const EFFECT_TYPES = ["Calming", "Energizing", "Balancing", "Neutral"] as const;
 export const CAFFEINE_OPTIONS = ["Yes", "No", "May Contain", "Unknown"] as const;
+export const BATCH_SIZE = 10;
+export const MAX_BATCHES = 3;

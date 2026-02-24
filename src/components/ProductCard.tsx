@@ -9,6 +9,7 @@ interface ProductCardProps {
   remaining: number;
   vibeLine?: string | null;
   image?: string;
+  batchNo?: string | null;
 }
 
 export default function ProductCard({
@@ -18,11 +19,13 @@ export default function ProductCard({
   remaining,
   vibeLine,
   image,
+  batchNo,
 }: ProductCardProps) {
   const soldOut = remaining <= 0;
+  const displayName = batchNo ? `No. ${batchNo.padStart(3, "0")} ${name}` : name;
 
   return (
-    <Link href={`/drop/${slug}`} className="group block">
+    <Link href={`/collection/${slug}`} className="group block">
       <div className="relative aspect-square bg-stone-200/50 overflow-hidden mb-3">
         {image ? (
           <Image
@@ -43,7 +46,7 @@ export default function ProductCard({
           </div>
         )}
       </div>
-      <h3 className="text-sm font-medium text-stone-800 mb-1">{name}</h3>
+      <h3 className="text-sm font-medium text-stone-800 mb-1">{displayName}</h3>
       <p className="text-sm text-stone-600 mb-1">{formatPrice(price)}</p>
       <p
         className={`text-xs tracking-wide uppercase ${

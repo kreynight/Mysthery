@@ -11,7 +11,13 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export default async function DropPage({ params }: PageProps) {
+function extractBatchNo(dropNotes: string | null): string | null {
+  if (!dropNotes) return null;
+  const match = dropNotes.match(/Batch\s*#?(\d+)/i);
+  return match ? match[1] : null;
+}
+
+export default async function CollectionPage({ params }: PageProps) {
   const { slug } = await params;
 
   let drop;
@@ -23,6 +29,11 @@ export default async function DropPage({ params }: PageProps) {
 
   if (!drop || !drop.isActive) notFound();
 
+  const batchNo = extractBatchNo(drop.dropNotes);
+  const displayName = batchNo
+    ? `No. ${batchNo.padStart(3, "0")} ${drop.name}`
+    : drop.name;
+
   const details: { label: string; value: string }[] = [];
   if (drop.effectType) details.push({ label: "Effect", value: drop.effectType });
   if (drop.caffeine) details.push({ label: "Caffeine", value: drop.caffeine });
@@ -31,7 +42,7 @@ export default async function DropPage({ params }: PageProps) {
     details.push({ label: "May Include", value: drop.ingredientMayInclude });
   if (drop.steepGuide) details.push({ label: "Steep Guide", value: drop.steepGuide });
   if (drop.allergenNote) details.push({ label: "Allergens", value: drop.allergenNote });
-  if (drop.dropNotes) details.push({ label: "Drop Notes", value: drop.dropNotes });
+  if (drop.dropNotes) details.push({ label: "Collection Notes", value: drop.dropNotes });
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
@@ -42,10 +53,10 @@ export default async function DropPage({ params }: PageProps) {
         {/* Info */}
         <div className="flex flex-col justify-start">
           <p className="text-xs tracking-[0.3em] uppercase text-stone-400 mb-2">
-            Limited Drop
+            Limited Collection
           </p>
           <h1 className="text-2xl md:text-3xl font-light tracking-wide text-stone-800 mb-2">
-            {drop.name}
+            {displayName}
           </h1>
           {drop.vibeLine && (
             <p className="text-sm italic text-stone-400 mb-4">{drop.vibeLine}</p>

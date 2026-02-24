@@ -158,10 +158,10 @@ function pickSteepGuide(ingredients: Ingredient[]): string {
     (i) => (i.category || "").toLowerCase().includes("herbal")
   );
 
-  if (hasBlackTea) return "212°F / 3–5 min";
-  if (hasGreenTea) return "175°F / 2–3 min";
-  if (hasHerbal) return "212°F / 5–7 min";
-  return "200°F / 3–5 min";
+  if (hasBlackTea) return "212°F / 3-5 min";
+  if (hasGreenTea) return "175°F / 2-3 min";
+  if (hasHerbal) return "212°F / 5-7 min";
+  return "200°F / 3-5 min";
 }
 
 function buildBlend(ingredients: Ingredient[]): BlendSuggestion {
@@ -304,7 +304,7 @@ export async function POST() {
       });
 
       if (calmingPool.length >= 3) {
-        // Pick 3–4 from calming pool with best pairings
+        // Pick 3-4 from calming pool with best pairings
         const shuffled = [...calmingPool].sort(() => Math.random() - 0.5);
         const picked = shuffled.slice(0, Math.min(4, shuffled.length));
         suggestions.push(buildBlend(picked));
@@ -334,7 +334,7 @@ export async function POST() {
       }
     }
 
-    // Strategy 4: Wild card — diverse blend from different categories
+    // Strategy 4: Wild card - diverse blend from different categories
     {
       const categoryGroups: Record<string, Ingredient[]> = {};
       for (const ing of allIngredients) {

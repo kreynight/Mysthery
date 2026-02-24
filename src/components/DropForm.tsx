@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { EFFECT_TYPES, CAFFEINE_OPTIONS } from "@/lib/constants";
+import { EFFECT_TYPES, CAFFEINE_OPTIONS, BATCH_SIZE, MAX_BATCHES } from "@/lib/constants";
 
 interface DropFormData {
   name: string;
@@ -41,8 +41,8 @@ const defaultData: DropFormData = {
   steepGuide: "",
   allergenNote: "",
   dropNotes: "",
-  batchQuantityTotal: "",
-  batchQuantityRemaining: "",
+  batchQuantityTotal: String(BATCH_SIZE),
+  batchQuantityRemaining: String(BATCH_SIZE),
   dropStartDate: "",
   isActive: true,
 };
@@ -80,6 +80,14 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
       "images",
       form.images.filter((_, i) => i !== idx)
     );
+  };
+
+  const currentBatches = Math.ceil(Number(form.batchQuantityTotal) / BATCH_SIZE) || 1;
+
+  const handleBatchChange = (batches: number) => {
+    const total = String(batches * BATCH_SIZE);
+    set("batchQuantityTotal", total);
+    if (!isEdit) set("batchQuantityRemaining", total);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -153,7 +161,7 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
         </div>
       </div>
 
-      {/* Price + Quantity */}
+      {/* Price + Batch Controls */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
@@ -172,19 +180,24 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
         </div>
         <div>
           <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
-            Batch Total *
+            Batches ({BATCH_SIZE} per batch) *
           </label>
-          <input
-            type="number"
-            min="1"
-            required
-            value={form.batchQuantityTotal}
-            onChange={(e) => {
-              set("batchQuantityTotal", e.target.value);
-              if (!isEdit) set("batchQuantityRemaining", e.target.value);
-            }}
-            className="w-full border border-stone-300 px-3 py-2.5 text-sm"
-          />
+          <div className="flex gap-2">
+            {Array.from({ length: MAX_BATCHES }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => handleBatchChange(n)}
+                className={`flex-1 py-2.5 text-sm border transition-colors ${
+                  currentBatches === n
+                    ? "bg-[#3d4a3a] text-white border-[#3d4a3a]"
+                    : "border-stone-300 hover:border-stone-500"
+                }`}
+              >
+                {n} ({n * BATCH_SIZE})
+              </button>
+            ))}
+          </div>
         </div>
         {isEdit && (
           <div>
@@ -194,6 +207,7 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
             <input
               type="number"
               min="0"
+              max={form.batchQuantityTotal}
               value={form.batchQuantityRemaining}
               onChange={(e) => set("batchQuantityRemaining", e.target.value)}
               className="w-full border border-stone-300 px-3 py-2.5 text-sm"
@@ -334,7 +348,7 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
           value={form.steepGuide}
           onChange={(e) => set("steepGuide", e.target.value)}
           className="w-full border border-stone-300 px-3 py-2.5 text-sm"
-          placeholder="200°F / 3-5 min"
+          placeholder="200F / 3-5 min"
         />
       </div>
 
@@ -352,24 +366,24 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
         />
       </div>
 
-      {/* Drop Notes */}
+      {/* Collection Notes */}
       <div>
         <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
-          Drop Notes
+          Collection Notes
         </label>
         <input
           type="text"
           value={form.dropNotes}
           onChange={(e) => set("dropNotes", e.target.value)}
           className="w-full border border-stone-300 px-3 py-2.5 text-sm"
-          placeholder="Batch #001 — Spring 2026"
+          placeholder="Batch #001 Spring 2026"
         />
       </div>
 
-      {/* Drop Start Date */}
+      {/* Release Date */}
       <div>
         <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
-          Drop Start Date
+          Release Date
         </label>
         <input
           type="date"
@@ -397,7 +411,7 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
           disabled={saving}
           className="bg-[#3d4a3a] text-white px-8 py-3 text-xs tracking-widest uppercase hover:bg-[#2f3a2d] transition-colors disabled:opacity-50"
         >
-          {saving ? "Saving..." : isEdit ? "Update Drop" : "Create Drop"}
+          {saving ? "Saving..." : isEdit ? "Update Collection" : "Create Collection"}
         </button>
         <button
           type="button"

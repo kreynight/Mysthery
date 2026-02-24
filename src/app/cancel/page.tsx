@@ -10,14 +10,14 @@ export default function CancelPage() {
         No worries.
       </h1>
       <p className="text-sm text-stone-500 mb-8 leading-relaxed">
-        Your order was cancelled and you were not charged. The drop is still available if
+        Your order was cancelled and you were not charged. The collection is still available if
         you change your mind.
       </p>
       <Link
         href="/"
         className="inline-block border border-[#3d4a3a] px-8 py-3 text-xs tracking-widest uppercase text-[#3d4a3a] hover:bg-[#3d4a3a] hover:text-white transition-colors"
       >
-        Browse Drops
+        Browse Collections
       </Link>
     </div>
   );

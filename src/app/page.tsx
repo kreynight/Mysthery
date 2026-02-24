@@ -5,6 +5,12 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
+function extractBatchNo(dropNotes: string | null): string | null {
+  if (!dropNotes) return null;
+  const match = dropNotes.match(/Batch\s*#?(\d+)/i);
+  return match ? match[1] : null;
+}
+
 export default async function Home() {
   let drops: Awaited<ReturnType<typeof prisma.drop.findMany>> = [];
   let dbError = false;
@@ -25,7 +31,7 @@ export default async function Home() {
           Limited Batches
         </p>
         <h1 className="text-2xl md:text-3xl font-light tracking-wide text-stone-800">
-          Current Drops
+          Current Collections
         </h1>
         <p className="text-sm text-stone-400 mt-3 max-w-md mx-auto">
           {SITE_TAGLINE}
@@ -50,7 +56,7 @@ export default async function Home() {
         </div>
       ) : drops.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-stone-400 text-sm">No drops available right now. Check back soon.</p>
+          <p className="text-stone-400 text-sm">No collections available right now. Check back soon.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -63,6 +69,7 @@ export default async function Home() {
               remaining={drop.batchQuantityRemaining}
               vibeLine={drop.vibeLine}
               image={drop.images[0]}
+              batchNo={extractBatchNo(drop.dropNotes)}
             />
           ))}
         </div>

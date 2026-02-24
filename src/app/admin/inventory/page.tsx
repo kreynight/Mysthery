@@ -21,7 +21,22 @@ interface Ingredient {
   inStock: boolean;
 }
 
-const EMPTY_FORM = {
+type EditForm = {
+  name: string;
+  brand: string;
+  teaNumber: string;
+  category: string;
+  ingredientsKey: string;
+  flavorNotes: string;
+  wellnessFunction: string;
+  caffeineLevel: string;
+  culturalRoots: string;
+  format: string;
+  notes: string;
+  inStock: boolean;
+};
+
+const EMPTY_FORM: EditForm = {
   name: "",
   brand: "",
   teaNumber: "",
@@ -49,16 +64,19 @@ const CATEGORY_OPTIONS = [
   "Specialty / Wellness",
 ];
 
-const CAFFEINE_OPTIONS = ["None", "Low", "Medium", "High", "Decaf", "VERIFY_ON_PACK"];
+const CAFFEINE_OPTIONS = ["None", "Low", "Medium", "Medium-High", "High", "Decaf/Very Low", "Decaf", "VERIFY_ON_PACK"];
 
 export default function AdminInventoryPage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState<EditForm>(EMPTY_FORM);
   const [filter, setFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<EditForm>(EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
   const [seedStatus, setSeedStatus] = useState("");
 
   const fetchIngredients = () => {
@@ -77,7 +95,7 @@ export default function AdminInventoryPage() {
   useEffect(fetchIngredients, []);
 
   const handleSeedFromInventory = async () => {
-    if (!confirm("This will load all 45 ingredients (and 3 demo drops) into the database. Existing data will be replaced. Continue?")) return;
+    if (!confirm("This will load all 45 ingredients (and 3 demo collections) into the database. Existing data will be replaced. Continue?")) return;
     setSeedStatus("Loading ingredients...");
     try {
       const res = await fetch("/api/admin/seed", { method: "POST" });
@@ -111,6 +129,44 @@ export default function AdminInventoryPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: ing.id, inStock: !ing.inStock }),
     });
+    fetchIngredients();
+  };
+
+  const startEditing = (ing: Ingredient) => {
+    setEditingId(ing.id);
+    setEditForm({
+      name: ing.name,
+      brand: ing.brand || "",
+      teaNumber: ing.teaNumber || "",
+      category: ing.category || "",
+      ingredientsKey: ing.ingredientsKey || "",
+      flavorNotes: ing.flavorNotes || "",
+      wellnessFunction: ing.wellnessFunction || "",
+      caffeineLevel: ing.caffeineLevel || "",
+      culturalRoots: ing.culturalRoots || "",
+      format: ing.format || "",
+      notes: ing.notes || "",
+      inStock: ing.inStock,
+    });
+    setExpanded(ing.id);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditForm(EMPTY_FORM);
+  };
+
+  const saveEdit = async () => {
+    if (!editingId) return;
+    setSaving(true);
+    await fetch("/api/admin/inventory", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: editingId, ...editForm }),
+    });
+    setSaving(false);
+    setEditingId(null);
+    setEditForm(EMPTY_FORM);
     fetchIngredients();
   };
 
@@ -160,101 +216,13 @@ export default function AdminInventoryPage() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleAdd} className="border border-stone-200 p-5 mb-6 space-y-4">
-          <p className="text-xs tracking-[0.2em] uppercase text-stone-400">New Ingredient</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <input
-              type="text"
-              required
-              placeholder="Name *"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
-            />
-            <input
-              type="text"
-              placeholder="Brand"
-              value={form.brand}
-              onChange={(e) => setForm({ ...form, brand: e.target.value })}
-              className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
-            />
-            <input
-              type="text"
-              placeholder="Tea Number"
-              value={form.teaNumber}
-              onChange={(e) => setForm({ ...form, teaNumber: e.target.value })}
-              className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
-            />
-            <select
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
-            >
-              <option value="">Category</option>
-              {CATEGORY_OPTIONS.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              placeholder="Flavor Notes"
-              value={form.flavorNotes}
-              onChange={(e) => setForm({ ...form, flavorNotes: e.target.value })}
-              className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
-            />
-            <input
-              type="text"
-              placeholder="Wellness Function"
-              value={form.wellnessFunction}
-              onChange={(e) => setForm({ ...form, wellnessFunction: e.target.value })}
-              className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
-            />
-            <select
-              value={form.caffeineLevel}
-              onChange={(e) => setForm({ ...form, caffeineLevel: e.target.value })}
-              className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
-            >
-              <option value="">Caffeine Level</option>
-              {CAFFEINE_OPTIONS.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              placeholder="Cultural Roots"
-              value={form.culturalRoots}
-              onChange={(e) => setForm({ ...form, culturalRoots: e.target.value })}
-              className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
-            />
-            <input
-              type="text"
-              placeholder="Ingredients Key"
-              value={form.ingredientsKey}
-              onChange={(e) => setForm({ ...form, ingredientsKey: e.target.value })}
-              className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
-            />
-            <input
-              type="text"
-              placeholder="Format (e.g. tea bags, loose leaf)"
-              value={form.format}
-              onChange={(e) => setForm({ ...form, format: e.target.value })}
-              className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
-            />
-          </div>
-          <textarea
-            placeholder="Notes"
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            className="w-full border border-stone-300 px-3 py-2 text-sm bg-transparent"
-            rows={2}
-          />
-          <button
-            type="submit"
-            className="bg-[#3d4a3a] text-white px-6 py-2.5 text-xs tracking-widest uppercase hover:bg-[#2f3a2d] transition-colors"
-          >
-            Add Ingredient
-          </button>
-        </form>
+        <IngredientForm
+          form={form}
+          setForm={setForm}
+          onSubmit={handleAdd}
+          title="New Ingredient"
+          submitLabel="Add Ingredient"
+        />
       )}
 
       {/* Filters */}
@@ -310,7 +278,10 @@ export default function AdminInventoryPage() {
             <div key={ing.id} className="border border-stone-200/60">
               <div
                 className="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-stone-50/50 transition-colors"
-                onClick={() => setExpanded(expanded === ing.id ? null : ing.id)}
+                onClick={() => {
+                  if (editingId === ing.id) return;
+                  setExpanded(expanded === ing.id ? null : ing.id);
+                }}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   {ing.inventoryNo && (
@@ -344,11 +315,121 @@ export default function AdminInventoryPage() {
                   >
                     {ing.inStock ? "In Stock" : "Out"}
                   </button>
-                  <span className="text-stone-300 text-xs">{expanded === ing.id ? "−" : "+"}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (editingId === ing.id) {
+                        cancelEditing();
+                      } else {
+                        startEditing(ing);
+                      }
+                    }}
+                    className="text-[10px] tracking-wider uppercase px-2 py-1 border border-stone-200 text-stone-500 hover:border-stone-400 transition-colors"
+                  >
+                    {editingId === ing.id ? "Cancel" : "Edit"}
+                  </button>
+                  <span className="text-stone-300 text-xs">{expanded === ing.id ? "\u2212" : "+"}</span>
                 </div>
               </div>
 
-              {expanded === ing.id && (
+              {expanded === ing.id && editingId === ing.id && (
+                <div className="px-4 pb-4 border-t border-stone-100 pt-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+                    <input
+                      type="text"
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                      placeholder="Name"
+                      className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={editForm.brand}
+                      onChange={(e) => setEditForm({ ...editForm, brand: e.target.value })}
+                      placeholder="Brand"
+                      className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={editForm.teaNumber}
+                      onChange={(e) => setEditForm({ ...editForm, teaNumber: e.target.value })}
+                      placeholder="Tea Number"
+                      className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+                    />
+                    <select
+                      value={editForm.category}
+                      onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                      className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+                    >
+                      <option value="">Category</option>
+                      {CATEGORY_OPTIONS.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      value={editForm.flavorNotes}
+                      onChange={(e) => setEditForm({ ...editForm, flavorNotes: e.target.value })}
+                      placeholder="Flavor Notes"
+                      className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={editForm.wellnessFunction}
+                      onChange={(e) => setEditForm({ ...editForm, wellnessFunction: e.target.value })}
+                      placeholder="Wellness Function"
+                      className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+                    />
+                    <select
+                      value={editForm.caffeineLevel}
+                      onChange={(e) => setEditForm({ ...editForm, caffeineLevel: e.target.value })}
+                      className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+                    >
+                      <option value="">Caffeine Level</option>
+                      {CAFFEINE_OPTIONS.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      value={editForm.culturalRoots}
+                      onChange={(e) => setEditForm({ ...editForm, culturalRoots: e.target.value })}
+                      placeholder="Cultural Roots"
+                      className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={editForm.ingredientsKey}
+                      onChange={(e) => setEditForm({ ...editForm, ingredientsKey: e.target.value })}
+                      placeholder="Ingredients Key"
+                      className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={editForm.format}
+                      onChange={(e) => setEditForm({ ...editForm, format: e.target.value })}
+                      placeholder="Format"
+                      className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+                    />
+                  </div>
+                  <textarea
+                    value={editForm.notes}
+                    onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                    placeholder="Notes"
+                    className="w-full border border-stone-300 px-3 py-2 text-sm bg-transparent mb-3"
+                    rows={2}
+                  />
+                  <button
+                    onClick={saveEdit}
+                    disabled={saving}
+                    className="bg-[#3d4a3a] text-white px-6 py-2.5 text-xs tracking-widest uppercase hover:bg-[#2f3a2d] transition-colors disabled:opacity-50"
+                  >
+                    {saving ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
+              )}
+
+              {expanded === ing.id && editingId !== ing.id && (
                 <div className="px-4 pb-4 border-t border-stone-100 pt-3">
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 text-xs">
                     {ing.brand && <Detail label="Brand" value={ing.brand} />}
@@ -374,6 +455,118 @@ export default function AdminInventoryPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+function IngredientForm({
+  form,
+  setForm,
+  onSubmit,
+  title,
+  submitLabel,
+}: {
+  form: EditForm;
+  setForm: (f: EditForm) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  title: string;
+  submitLabel: string;
+}) {
+  return (
+    <form onSubmit={onSubmit} className="border border-stone-200 p-5 mb-6 space-y-4">
+      <p className="text-xs tracking-[0.2em] uppercase text-stone-400">{title}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <input
+          type="text"
+          required
+          placeholder="Name *"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+        />
+        <input
+          type="text"
+          placeholder="Brand"
+          value={form.brand}
+          onChange={(e) => setForm({ ...form, brand: e.target.value })}
+          className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+        />
+        <input
+          type="text"
+          placeholder="Tea Number"
+          value={form.teaNumber}
+          onChange={(e) => setForm({ ...form, teaNumber: e.target.value })}
+          className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+        />
+        <select
+          value={form.category}
+          onChange={(e) => setForm({ ...form, category: e.target.value })}
+          className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+        >
+          <option value="">Category</option>
+          {CATEGORY_OPTIONS.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+        <input
+          type="text"
+          placeholder="Flavor Notes"
+          value={form.flavorNotes}
+          onChange={(e) => setForm({ ...form, flavorNotes: e.target.value })}
+          className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+        />
+        <input
+          type="text"
+          placeholder="Wellness Function"
+          value={form.wellnessFunction}
+          onChange={(e) => setForm({ ...form, wellnessFunction: e.target.value })}
+          className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+        />
+        <select
+          value={form.caffeineLevel}
+          onChange={(e) => setForm({ ...form, caffeineLevel: e.target.value })}
+          className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+        >
+          <option value="">Caffeine Level</option>
+          {CAFFEINE_OPTIONS.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+        <input
+          type="text"
+          placeholder="Cultural Roots"
+          value={form.culturalRoots}
+          onChange={(e) => setForm({ ...form, culturalRoots: e.target.value })}
+          className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+        />
+        <input
+          type="text"
+          placeholder="Ingredients Key"
+          value={form.ingredientsKey}
+          onChange={(e) => setForm({ ...form, ingredientsKey: e.target.value })}
+          className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+        />
+        <input
+          type="text"
+          placeholder="Format (e.g. tea bags, loose leaf)"
+          value={form.format}
+          onChange={(e) => setForm({ ...form, format: e.target.value })}
+          className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
+        />
+      </div>
+      <textarea
+        placeholder="Notes"
+        value={form.notes}
+        onChange={(e) => setForm({ ...form, notes: e.target.value })}
+        className="w-full border border-stone-300 px-3 py-2 text-sm bg-transparent"
+        rows={2}
+      />
+      <button
+        type="submit"
+        className="bg-[#3d4a3a] text-white px-6 py-2.5 text-xs tracking-widest uppercase hover:bg-[#2f3a2d] transition-colors"
+      >
+        {submitLabel}
+      </button>
+    </form>
   );
 }
 
