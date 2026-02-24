@@ -78,16 +78,16 @@ async function main() {
   // Sample Inventory Ingredients
   await prisma.inventoryIngredient.createMany({
     data: [
-      { name: "Chamomile", category: "flower", origin: "Egypt", notes: "Whole dried flowers" },
-      { name: "Lavender", category: "flower", origin: "France", notes: "Culinary grade buds" },
-      { name: "Peppermint", category: "herb", origin: "Pacific Northwest", notes: "Dried leaf" },
-      { name: "Assam Black Tea", category: "tea", origin: "India", notes: "CTC grade" },
-      { name: "Sencha", category: "tea", origin: "Japan", notes: "First flush" },
-      { name: "Cinnamon", category: "spice", origin: "Sri Lanka", notes: "Ceylon sticks, ground" },
-      { name: "Ginger Root", category: "root", origin: "Peru", notes: "Dried, sliced" },
-      { name: "Reishi", category: "fungi", origin: "China", notes: "Powdered extract" },
-      { name: "Lemon Peel", category: "fruit", origin: "California", notes: "Dried zest" },
-      { name: "Hibiscus", category: "flower", origin: "Nigeria", notes: "Dried calyces" },
+      { name: "Chamomile", category: "flower", culturalRoots: "Egypt", notes: "Whole dried flowers" },
+      { name: "Lavender", category: "flower", culturalRoots: "France", notes: "Culinary grade buds" },
+      { name: "Peppermint", category: "herb", culturalRoots: "Pacific Northwest", notes: "Dried leaf" },
+      { name: "Assam Black Tea", category: "tea", culturalRoots: "India", notes: "CTC grade" },
+      { name: "Sencha", category: "tea", culturalRoots: "Japan", notes: "First flush" },
+      { name: "Cinnamon", category: "spice", culturalRoots: "Sri Lanka", notes: "Ceylon sticks, ground" },
+      { name: "Ginger Root", category: "root", culturalRoots: "Peru", notes: "Dried, sliced" },
+      { name: "Reishi", category: "fungi", culturalRoots: "China", notes: "Powdered extract" },
+      { name: "Lemon Peel", category: "fruit", culturalRoots: "California", notes: "Dried zest" },
+      { name: "Hibiscus", category: "flower", culturalRoots: "Nigeria", notes: "Dried calyces" },
     ],
   });
 
