@@ -69,6 +69,9 @@ export default function Header() {
           </div>
         </Link>
         <nav className="flex gap-6 text-xs tracking-wide uppercase text-stone-400">
+          <Link href="/blog" className="hover:text-[#3d4a3a] transition-colors">
+            Journal
+          </Link>
           <Link href="/about" className="hover:text-[#3d4a3a] transition-colors">
             About
           </Link>

@@ -1,0 +1,36 @@
+# Mystherie - Tea Atelier
+
+> Mystery tea collections. Limited batches. Curated blends.
+
+Mystherie is a specialty tea brand offering limited-batch mystery tea collections. Each collection is a curated blend of herbs, teas, and botanicals with a secret recipe. Customers know the general flavor profile, effect type, caffeine status, and allergen information, but the exact blend remains a surprise. When a batch sells out, it's gone forever.
+
+## Core Pages
+
+- [Home](https://mystherie.com/): Browse current limited-edition tea collections
+- [About](https://mystherie.com/about): Our story, mission, and how mystery collections work
+- [FAQ](https://mystherie.com/faq): Common questions about collections, caffeine, allergens, and shipping
+- [Blog](https://mystherie.com/blog): Tea culture, brewing guides, and behind-the-blend insights
+
+## Blog Posts
+
+- [Mystery Tea Subscription Box: What to Expect](https://mystherie.com/blog/mystery-tea-subscription-box): Guide to curated mystery tea experiences
+- [Best Herbal Tea Blends for Sleep](https://mystherie.com/blog/best-herbal-tea-blends-for-sleep): Caffeine-free blends for bedtime
+- [How to Steep Tea Perfectly](https://mystherie.com/blog/how-to-steep-tea-perfectly): Temperature, time, and technique for every tea type
+- [Caffeine in Tea vs Coffee](https://mystherie.com/blog/caffeine-in-tea-vs-coffee): Comparing caffeine content and effects
+- [What Is Pu'er Tea?](https://mystherie.com/blog/what-is-puer-tea): Beginner's guide to aged tea
+- [Loose Leaf vs Tea Bags](https://mystherie.com/blog/loose-leaf-vs-tea-bags): Quality differences and when each makes sense
+- [Haitian Bush Tea Tradition](https://mystherie.com/blog/haitian-bush-tea-healing-tradition): Caribbean botanical healing heritage
+- [Best Teas for Anxiety and Stress](https://mystherie.com/blog/best-teas-for-anxiety-stress-relief): Calming tea blends and their traditions
+- [How to Build a Home Tea Collection](https://mystherie.com/blog/how-to-build-home-tea-collection): A curator's guide to essential teas
+- [The Art of Tea Blending](https://mystherie.com/blog/art-of-tea-blending): How mystery tea collections are crafted
+
+## Key Concepts
+
+- **Mystery Collections**: Limited-run tea blends with undisclosed recipes. General profile (flavor, effect, caffeine) is shared; exact ingredients are the surprise.
+- **Batch Model**: Each collection has a fixed quantity (typically 10-30 units). Once sold out, that blend is retired.
+- **Ingredient Library**: Blends draw from 45+ curated ingredients spanning Japanese green teas, Haitian herbal remedies, Indian chai, European blends, and more.
+- **Transparency**: Caffeine status, allergen warnings, steep guides, and effect types are always disclosed.
+
+## Contact
+
+For questions or wholesale inquiries, reach out through the website.

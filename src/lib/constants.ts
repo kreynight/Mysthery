@@ -12,3 +12,4 @@ export const EFFECT_TYPES = ["Calming", "Energizing", "Balancing", "Neutral"] as
 export const CAFFEINE_OPTIONS = ["Yes", "No", "May Contain", "Unknown"] as const;
 export const BATCH_SIZE = 10;
 export const MAX_BATCHES = 3;
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mystherie.com";
