@@ -28,6 +28,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
     }
 
+    // Auto-assign batch number if not already present in dropNotes
+    let dropNotes = data.dropNotes || "";
+    if (!/Batch\s*#?\d+/i.test(dropNotes)) {
+      const count = await prisma.drop.count();
+      const nextNum = String(count + 1).padStart(3, "0");
+      dropNotes = dropNotes
+        ? `Batch #${nextNum} ${dropNotes}`
+        : `Batch #${nextNum}`;
+    }
+
     const drop = await prisma.drop.create({
       data: {
         name: data.name,
@@ -41,7 +51,7 @@ export async function POST(req: NextRequest) {
         ingredientMayInclude: data.ingredientMayInclude || null,
         steepGuide: data.steepGuide || null,
         allergenNote: data.allergenNote || null,
-        dropNotes: data.dropNotes || null,
+        dropNotes: dropNotes || null,
         batchQuantityTotal: parseInt(data.batchQuantityTotal, 10),
         batchQuantityRemaining: parseInt(data.batchQuantityTotal, 10),
         dropStartDate: data.dropStartDate ? new Date(data.dropStartDate) : null,
