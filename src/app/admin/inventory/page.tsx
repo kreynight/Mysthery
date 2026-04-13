@@ -300,6 +300,11 @@ export default function AdminInventoryPage() {
                       {ing.caffeineLevel} caffeine
                     </span>
                   )}
+                  {ing.culturalRoots && (
+                    <span className="text-[10px] tracking-wider uppercase text-[#3d4a3a] bg-[#3d4a3a]/5 px-2 py-0.5 shrink-0">
+                      {ing.culturalRoots}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <button
