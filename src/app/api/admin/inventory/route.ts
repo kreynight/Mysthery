@@ -8,6 +8,25 @@ export async function GET() {
   }
 
   try {
+    // Auto-backfill any ingredients missing an inventoryNo
+    const missing = await prisma.inventoryIngredient.findMany({
+      where: { inventoryNo: null },
+      orderBy: { createdAt: "asc" },
+    });
+    if (missing.length > 0) {
+      const maxResult = await prisma.inventoryIngredient.aggregate({
+        _max: { inventoryNo: true },
+      });
+      let nextNo = (maxResult._max.inventoryNo || 0) + 1;
+      for (const ing of missing) {
+        await prisma.inventoryIngredient.update({
+          where: { id: ing.id },
+          data: { inventoryNo: nextNo },
+        });
+        nextNo++;
+      }
+    }
+
     const ingredients = await prisma.inventoryIngredient.findMany({
       orderBy: { inventoryNo: "asc" },
     });
@@ -25,8 +44,15 @@ export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
 
+    // Auto-assign next inventoryNo
+    const maxResult = await prisma.inventoryIngredient.aggregate({
+      _max: { inventoryNo: true },
+    });
+    const nextNo = (maxResult._max.inventoryNo || 0) + 1;
+
     const ingredient = await prisma.inventoryIngredient.create({
       data: {
+        inventoryNo: nextNo,
         name: data.name,
         brand: data.brand || null,
         teaNumber: data.teaNumber || null,
