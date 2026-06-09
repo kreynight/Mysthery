@@ -194,32 +194,30 @@ export async function GET() {
       CREATE UNIQUE INDEX IF NOT EXISTS "InventoryIngredient_inventoryNo_key" ON "InventoryIngredient"("inventoryNo");
     `);
 
-    // Step 2: Check if already seeded
+    // Step 2: Seed drops only if empty (preserve any the admin created)
     const existingDrops = await prisma.drop.count();
-    const existingInventory = await prisma.inventoryIngredient.count();
-
-    if (existingDrops > 0 && existingInventory > 0) {
-      return NextResponse.json({
-        ok: true,
-        message: `Already initialized. Found ${existingDrops} drops and ${existingInventory} ingredients. No changes made.`,
-      });
-    }
-
-    // Step 3: Seed drops (if empty)
     if (existingDrops === 0) {
       await prisma.drop.createMany({ data: DROPS });
     }
 
-    // Step 4: Seed inventory (if empty)
-    if (existingInventory === 0) {
-      for (const item of INVENTORY) {
-        await prisma.inventoryIngredient.create({ data: item });
-      }
+    // Step 3: Add any inventory items that aren't already present (by inventoryNo).
+    // This is additive and idempotent, so it's safe to hit repeatedly after
+    // adding new teas to the INVENTORY list.
+    const existing = await prisma.inventoryIngredient.findMany({
+      select: { inventoryNo: true },
+    });
+    const existingNos = new Set(existing.map((i) => i.inventoryNo));
+
+    let added = 0;
+    for (const item of INVENTORY) {
+      if (existingNos.has(item.inventoryNo)) continue;
+      await prisma.inventoryIngredient.create({ data: item });
+      added++;
     }
 
     return NextResponse.json({
       ok: true,
-      message: `Initialized! Created tables, ${existingDrops === 0 ? "3 drops" : "drops already existed"}, ${existingInventory === 0 ? "45 ingredients" : "ingredients already existed"}.`,
+      message: `Done. ${existingDrops === 0 ? "Seeded 3 collections. " : ""}Added ${added} new ingredient${added === 1 ? "" : "s"}. Total now ${existing.length + added}.`,
     });
   } catch (error) {
     console.error("Init error:", error);
