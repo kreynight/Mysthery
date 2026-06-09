@@ -41,7 +41,7 @@ export default function ProductCard({
           </div>
         )}
         {soldOut && (
-          <div className="absolute inset-0 bg-[#f5f2ed]/70 flex items-center justify-center">
+          <div className="absolute inset-0 bg-[#dedcd8]/70 flex items-center justify-center">
             <span className="text-sm tracking-widest uppercase text-stone-500">Sold Out</span>
           </div>
         )}
