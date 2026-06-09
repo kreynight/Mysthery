@@ -200,18 +200,21 @@ export async function GET() {
       await prisma.drop.createMany({ data: DROPS });
     }
 
-    // Step 3: Add any inventory items that aren't already present (by inventoryNo).
-    // This is additive and idempotent, so it's safe to hit repeatedly after
-    // adding new teas to the INVENTORY list.
+    // Step 3: Add any inventory items not already present, matched by NAME so we
+    // never collide with numbers the admin's manually-added teas already use.
+    // Each genuinely-new tea gets the next free inventoryNo (max + 1), so this is
+    // safe regardless of how many ingredients already exist.
     const existing = await prisma.inventoryIngredient.findMany({
-      select: { inventoryNo: true },
+      select: { name: true, inventoryNo: true },
     });
-    const existingNos = new Set(existing.map((i) => i.inventoryNo));
+    const existingNames = new Set(existing.map((i) => i.name));
+    let nextNo = existing.reduce((max, i) => Math.max(max, i.inventoryNo ?? 0), 0);
 
     let added = 0;
     for (const item of INVENTORY) {
-      if (existingNos.has(item.inventoryNo)) continue;
-      await prisma.inventoryIngredient.create({ data: item });
+      if (existingNames.has(item.name)) continue;
+      nextNo += 1;
+      await prisma.inventoryIngredient.create({ data: { ...item, inventoryNo: nextNo } });
       added++;
     }
 
