@@ -5,12 +5,14 @@ import BuyButton from "@/components/BuyButton";
 import { FlowerSprig } from "@/components/Botanicals";
 import Link from "next/link";
 import { formatPrice, formatRemaining } from "@/lib/format";
+import { parseSize, priceTiers } from "@/lib/pricing";
 import { batchCaffeine, packLabel } from "@/lib/recipe";
 
 export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ size?: string }>;
 }
 
 function extractBatchNo(dropNotes: string | null): string | null {
@@ -19,8 +21,9 @@ function extractBatchNo(dropNotes: string | null): string | null {
   return match ? match[1] : null;
 }
 
-export default async function CollectionPage({ params }: PageProps) {
+export default async function CollectionPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const initialSize = parseSize((await searchParams).size) ?? 1;
 
   let drop;
   try {
@@ -51,8 +54,8 @@ export default async function CollectionPage({ params }: PageProps) {
   if (drop.allergenNote) details.push({ label: "Allergens", value: drop.allergenNote });
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14">
+    <div className="max-w-6xl mx-auto px-4 py-6 md:py-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-14">
         {/* Images */}
         <ImageGallery images={drop.images} name={drop.name} />
 
@@ -65,7 +68,7 @@ export default async function CollectionPage({ params }: PageProps) {
             </p>
             <FlowerSprig className="w-14 -mt-2 shrink-0" />
           </div>
-          <h1 className="font-display text-4xl md:text-5xl font-light text-[#2b3a28] mb-3">
+          <h1 className="font-display text-3xl md:text-5xl font-light text-[#2b3a28] mb-2 md:mb-3">
             {drop.name}
           </h1>
           {drop.vibeLine && (
@@ -85,8 +88,8 @@ export default async function CollectionPage({ params }: PageProps) {
             </dl>
           )}
 
-          <div className="flex items-baseline gap-4 mb-2">
-            <span className="text-2xl font-medium text-[#5b4532]">{formatPrice(drop.price)}</span>
+          <div className="flex items-baseline gap-2 mb-2">
+            <span className="text-2xl font-medium text-[#5b4532]">From {formatPrice(drop.price)}</span>
           </div>
 
           <p
@@ -98,13 +101,16 @@ export default async function CollectionPage({ params }: PageProps) {
                 : "text-[#3d4a3a]"
             }`}
           >
-            {formatRemaining(drop.batchQuantityRemaining)}
+            {drop.batchQuantityRemaining > 0
+              ? `${drop.batchQuantityRemaining} of ${drop.batchQuantityTotal} pouches left`
+              : formatRemaining(drop.batchQuantityRemaining)}
           </p>
 
           <BuyButton
             dropId={drop.id}
-            price={drop.price}
+            tiers={priceTiers(drop.price, drop.price3, drop.price5)}
             remaining={drop.batchQuantityRemaining}
+            initialSize={initialSize <= drop.batchQuantityRemaining ? initialSize : 1}
           />
 
           {/* Detail items */}

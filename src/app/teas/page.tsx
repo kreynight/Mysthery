@@ -45,7 +45,7 @@ export default async function TeaLibraryPage() {
   if (other.length) groups.push({ family: "other", teas: other });
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12">
+    <div className="max-w-6xl mx-auto px-4 py-6 md:py-12">
       <section className="relative rounded-3xl overflow-hidden bg-[#3d4a3a] min-h-[280px] flex items-end mb-12">
         <Image src={PHOTOS.library} alt="" fill priority className="object-cover opacity-60" sizes="1150px" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#1e2a1c]/90 via-[#1e2a1c]/50 to-transparent" />
@@ -91,7 +91,7 @@ export default async function TeaLibraryPage() {
                 </h2>
                 {FAMILIES[g.family] && <p className="text-sm text-stone-500">{FAMILIES[g.family].blurb}</p>}
               </div>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 md:gap-4">
                 {g.teas.map((t) => (
                   <TeaCard key={t.id} tea={t} />
                 ))}

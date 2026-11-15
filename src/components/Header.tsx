@@ -64,7 +64,7 @@ const NAV = [
 export default function Header() {
   return (
     <header className="w-full border-b border-stone-200 bg-[#eef2e6]/80 backdrop-blur-sm">
-      <div className="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+      <div className="max-w-6xl mx-auto px-4 py-3 md:py-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
         <Link href="/" className="flex items-center gap-3 group">
           <BotanicalLogo />
           <div className="flex flex-col">
@@ -76,7 +76,7 @@ export default function Header() {
             </span>
           </div>
         </Link>
-        <nav aria-label="Main" className="flex flex-wrap gap-x-5 gap-y-2 text-xs tracking-wide uppercase text-stone-500">
+        <nav aria-label="Main" className="-mx-4 px-4 w-[calc(100%+2rem)] sm:w-auto sm:mx-0 sm:px-0 flex gap-x-5 overflow-x-auto whitespace-nowrap py-1 text-xs tracking-wide uppercase text-stone-500 [scrollbar-width:none]">
           {NAV.map((n) => (
             <Link
               key={n.href}

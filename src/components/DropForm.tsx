@@ -10,6 +10,8 @@ interface DropFormData {
   name: string;
   slug: string;
   price: string;
+  price3: string;
+  price5: string;
   images: string[];
   vibeLine: string;
   effectType: string;
@@ -161,6 +163,8 @@ const defaultData: DropFormData = {
   name: "",
   slug: "",
   price: "",
+  price3: "",
+  price5: "",
   images: [],
   vibeLine: "",
   effectType: "",
@@ -230,6 +234,8 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
     const payload = {
       ...form,
       price: Math.round(parseFloat(form.price) * 100), // dollars to cents
+      price3: form.price3 ? Math.round(parseFloat(form.price3) * 100) : null,
+      price5: form.price5 ? Math.round(parseFloat(form.price5) * 100) : null,
     };
 
     try {
@@ -297,7 +303,7 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
-            Price (USD) *
+            1 pouch price (USD) *
           </label>
           <input
             type="number"
@@ -307,8 +313,35 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
             value={form.price}
             onChange={(e) => set("price", e.target.value)}
             className="w-full border border-stone-300 px-3 py-2.5 text-sm"
-            placeholder="12.00"
+            placeholder="18.00"
           />
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <label className="text-[11px] uppercase tracking-wide text-stone-500">
+              3 pouches
+              <input
+                type="number"
+                step="0.01"
+                min="0.50"
+                value={form.price3}
+                onChange={(e) => set("price3", e.target.value)}
+                className="mt-1 w-full border border-stone-300 px-3 py-2 text-sm normal-case"
+                placeholder="48.00"
+              />
+            </label>
+            <label className="text-[11px] uppercase tracking-wide text-stone-500">
+              5 pouches
+              <input
+                type="number"
+                step="0.01"
+                min="0.50"
+                value={form.price5}
+                onChange={(e) => set("price5", e.target.value)}
+                className="mt-1 w-full border border-stone-300 px-3 py-2 text-sm normal-case"
+                placeholder="72.00"
+              />
+            </label>
+          </div>
+          <p className="text-[11px] text-stone-400 mt-1">Shipping is $6 on 1 pouch and free on 3 or more.</p>
         </div>
         <div>
           <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">

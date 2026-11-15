@@ -5,6 +5,8 @@ import ProductCard from "@/components/ProductCard";
 import { LeafSprig, FlowerSprig, VineDivider } from "@/components/Botanicals";
 import { PHOTOS } from "@/lib/photos";
 import { batchCaffeine } from "@/lib/recipe";
+import { FREE_SHIP_FROM, SHIPPING_SINGLE, priceTiers } from "@/lib/pricing";
+import { formatPrice } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +35,7 @@ export default async function Home() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="max-w-6xl mx-auto px-4 pt-8 md:pt-12">
-          <div className="relative rounded-3xl overflow-hidden bg-[#2b3a28] min-h-[460px] md:min-h-[540px] flex items-end">
+          <div className="relative rounded-3xl overflow-hidden bg-[#2b3a28] min-h-[380px] md:min-h-[540px] flex items-end">
             <Image
               src={PHOTOS.hero}
               alt="A glass cup of tea surrounded by loose leaves and herbs"
@@ -75,11 +77,14 @@ export default async function Home() {
       </section>
 
       {/* Batches */}
-      <section id="batches" className="max-w-6xl mx-auto px-4 pt-20 scroll-mt-6">
-        <div className="flex flex-wrap items-end justify-between gap-4 mb-10">
+      <section id="batches" className="max-w-6xl mx-auto px-4 pt-10 md:pt-16 scroll-mt-6">
+        <div className="flex flex-wrap items-end justify-between gap-4 mb-5 md:mb-8">
           <div>
-            <p className="text-[11px] tracking-[0.3em] uppercase text-[#7a5a3c] mb-2">The current pour</p>
-            <h2 className="font-display text-3xl md:text-4xl font-light text-[#2b3a28]">Available batches</h2>
+            <p className="text-[11px] tracking-[0.3em] uppercase text-[#7a5a3c] mb-1.5">The current pour</p>
+            <h2 className="font-display text-2xl md:text-4xl font-light text-[#2b3a28]">Available batches</h2>
+            <p className="text-xs text-stone-500 mt-1.5">
+              1, 3 or 5 pouches of 1 oz each. Free shipping on {FREE_SHIP_FROM} or more, {formatPrice(SHIPPING_SINGLE)} on a single.
+            </p>
           </div>
           <FlowerSprig className="w-20 hidden sm:block" />
         </div>
@@ -91,31 +96,31 @@ export default async function Home() {
         ) : drops.length === 0 ? (
           <p className="text-stone-500 text-sm py-16 text-center">No batches available right now. Check back soon.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
             {drops.map((drop) => (
               <ProductCard
                 key={drop.id}
                 slug={drop.slug}
                 name={drop.name}
-                price={drop.price}
+                tiers={priceTiers(drop.price, drop.price3, drop.price5)}
                 remaining={drop.batchQuantityRemaining}
+                total={drop.batchQuantityTotal}
                 vibeLine={drop.vibeLine}
                 image={drop.images[0]}
                 batchNo={extractBatchNo(drop.dropNotes)}
                 mood={drop.mood || drop.effectType}
                 caffeine={batchCaffeine(drop.caffeine)}
-                bestTime={drop.bestTime}
               />
             ))}
           </div>
         )}
       </section>
 
-      <VineDivider className="max-w-6xl mx-auto px-4 my-20" />
+      <VineDivider className="max-w-6xl mx-auto px-4 my-12 md:my-20" />
 
       {/* Make a mix + tea library */}
-      <section className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Link href="/mix" className="group relative rounded-3xl overflow-hidden min-h-[340px] flex items-end bg-[#5b4532]">
+      <section className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+        <Link href="/mix" className="group relative rounded-3xl overflow-hidden min-h-[240px] md:min-h-[340px] flex items-end bg-[#5b4532]">
           <Image
             src={PHOTOS.mix}
             alt="Loose teas and dried herbs on wooden spoons"
@@ -124,15 +129,15 @@ export default async function Home() {
             sizes="(max-width: 768px) 100vw, 50vw"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#2a1f15]/90 via-[#2a1f15]/30 to-transparent" />
-          <div className="relative p-8">
+          <div className="relative p-6 md:p-8">
             <p className="text-[11px] tracking-[0.3em] uppercase text-[#e5cfae] mb-2">Mix generator</p>
             <h3 className="font-display text-3xl font-light text-[#fbf6ef] mb-2">Make a mix</h3>
             <p className="text-sm text-[#efe6da] max-w-sm">
-              Pick a mood, a flavor and a time of day. We generate a blend that brews well together.
+              Tap what you like, pull the lever, and get a one-of-a-kind blend made to order.
             </p>
           </div>
         </Link>
-        <Link href="/teas" className="group relative rounded-3xl overflow-hidden min-h-[340px] flex items-end bg-[#3d4a3a]">
+        <Link href="/teas" className="group relative rounded-3xl overflow-hidden min-h-[240px] md:min-h-[340px] flex items-end bg-[#3d4a3a]">
           <Image
             src={PHOTOS.library}
             alt="Assorted herbal teas and spices"
@@ -141,7 +146,7 @@ export default async function Home() {
             sizes="(max-width: 768px) 100vw, 50vw"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#1e2a1c]/90 via-[#1e2a1c]/30 to-transparent" />
-          <div className="relative p-8">
+          <div className="relative p-6 md:p-8">
             <p className="text-[11px] tracking-[0.3em] uppercase text-[#d3dec6] mb-2">
               {teaCount > 0 ? `${teaCount} teas and botanicals` : "Teas and botanicals"}
             </p>
@@ -154,8 +159,8 @@ export default async function Home() {
       </section>
 
       {/* How it works */}
-      <section className="max-w-6xl mx-auto px-4 mt-20">
-        <div className="relative rounded-3xl bg-[#e1e9d6] px-8 py-10 grid grid-cols-1 sm:grid-cols-3 gap-8 overflow-hidden">
+      <section className="max-w-6xl mx-auto px-4 mt-12 md:mt-20">
+        <div className="relative rounded-3xl bg-[#e1e9d6] px-6 py-8 md:px-8 md:py-10 grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8 overflow-hidden">
           <LeafSprig className="absolute -right-4 -bottom-10 w-32 opacity-50" />
           {[
             ["01", "Pick a mood", "Calming, energizing or balancing."],

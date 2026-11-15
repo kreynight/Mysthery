@@ -21,7 +21,7 @@ export async function GET() {
   ]);
   return NextResponse.json({
     rules,
-    setting: setting || { id: "default", minTeas: 2, maxTeas: 3, price: 1600, isEnabled: true, packGrams: 28 },
+    setting: setting || { id: "default", minTeas: 2, maxTeas: 3, price: 1600, price3: null, price5: null, isEnabled: true, packGrams: 28 },
     teas: teas.map((t) => ({
       id: t.id,
       inventoryNo: t.inventoryNo,
@@ -60,7 +60,11 @@ export async function POST(req: NextRequest) {
         const maxTeas = Math.max(minTeas, Math.min(6, Number(body.maxTeas) || 3));
         const price = Math.max(100, Math.min(100000, Math.round(Number(body.price) || 1600)));
         const packGrams = Math.max(5, Math.min(500, Math.round(Number(body.packGrams) || 28)));
-        const data = { minTeas, maxTeas, price, packGrams, isEnabled: !!body.isEnabled };
+        const tier = (v: unknown) => {
+          const n = Math.round(Number(v));
+          return Number.isFinite(n) && n >= 100 ? Math.min(n, 500000) : null;
+        };
+        const data = { minTeas, maxTeas, price, price3: tier(body.price3), price5: tier(body.price5), packGrams, isEnabled: !!body.isEnabled };
         const setting = await prisma.mixSetting.upsert({
           where: { id: "default" },
           update: data,

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { buildOrderRecipe, type OrderRecipe, type RecipeItem } from "@/lib/recipe";
 import { DEFAULT_RULES, toPublicTea, type MixSettingLike, type PublicTea, type RuleLike } from "@/lib/mix";
 
-const DEFAULT_SETTING: MixSettingLike = { minTeas: 2, maxTeas: 3, price: 1600, isEnabled: true, packGrams: 28 };
+const DEFAULT_SETTING: MixSettingLike = { minTeas: 2, maxTeas: 3, price: 1600, price3: null, price5: null, isEnabled: true, packGrams: 28 };
 
 /** In-stock teas, with only the fields that are safe to show customers. */
 export async function getPublicTeas(): Promise<PublicTea[]> {
@@ -36,7 +36,7 @@ export async function getMixSetting(): Promise<MixSettingLike> {
   try {
     const s = await prisma.mixSetting.findUnique({ where: { id: "default" } });
     return s
-      ? { minTeas: s.minTeas, maxTeas: s.maxTeas, price: s.price, isEnabled: s.isEnabled, packGrams: s.packGrams || 28 }
+      ? { minTeas: s.minTeas, maxTeas: s.maxTeas, price: s.price, price3: s.price3, price5: s.price5, isEnabled: s.isEnabled, packGrams: s.packGrams || 28 }
       : DEFAULT_SETTING;
   } catch {
     return DEFAULT_SETTING;

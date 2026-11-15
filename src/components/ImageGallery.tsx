@@ -21,7 +21,7 @@ export default function ImageGallery({ images, name }: ImageGalleryProps) {
 
   return (
     <div>
-      <div className="relative aspect-square bg-stone-200 overflow-hidden rounded-2xl mb-3">
+      <div className="relative aspect-[4/3] md:aspect-square bg-stone-200 overflow-hidden rounded-2xl mb-3">
         <Image
           src={images[selected]}
           alt={`${name} - image ${selected + 1}`}

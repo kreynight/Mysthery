@@ -14,6 +14,8 @@ interface Setting {
   minTeas: number;
   maxTeas: number;
   price: number;
+  price3: number | null;
+  price5: number | null;
   isEnabled: boolean;
   packGrams: number;
 }
@@ -42,7 +44,7 @@ async function post(body: object) {
 
 export default function MixRulesAdmin() {
   const [rules, setRules] = useState<Rule[]>([]);
-  const [setting, setSetting] = useState<Setting>({ minTeas: 2, maxTeas: 3, price: 1600, isEnabled: true, packGrams: 28 });
+  const [setting, setSetting] = useState<Setting>({ minTeas: 2, maxTeas: 3, price: 1600, price3: null, price5: null, isEnabled: true, packGrams: 28 });
   const [teas, setTeas] = useState<Tea[]>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
@@ -118,8 +120,16 @@ export default function MixRulesAdmin() {
             <input type="number" min={1} max={6} className={field} value={setting.maxTeas} onChange={(e) => setSetting({ ...setting, maxTeas: Number(e.target.value) })} />
           </label>
           <label className="text-xs text-stone-500 flex flex-col gap-1">
-            Price ($)
+            1 pouch ($)
             <input type="number" min={1} step="0.01" className={field} value={(setting.price / 100).toFixed(2)} onChange={(e) => setSetting({ ...setting, price: Math.round(Number(e.target.value) * 100) })} />
+          </label>
+          <label className="text-xs text-stone-500 flex flex-col gap-1">
+            3 pouches ($)
+            <input type="number" min={1} step="0.01" className={field} value={setting.price3 ? (setting.price3 / 100).toFixed(2) : ""} placeholder="auto" onChange={(e) => setSetting({ ...setting, price3: e.target.value ? Math.round(Number(e.target.value) * 100) : null })} />
+          </label>
+          <label className="text-xs text-stone-500 flex flex-col gap-1">
+            5 pouches ($)
+            <input type="number" min={1} step="0.01" className={field} value={setting.price5 ? (setting.price5 / 100).toFixed(2) : ""} placeholder="auto" onChange={(e) => setSetting({ ...setting, price5: e.target.value ? Math.round(Number(e.target.value) * 100) : null })} />
           </label>
           <label className="text-xs text-stone-500 flex flex-col gap-1">
             Pouch (grams)

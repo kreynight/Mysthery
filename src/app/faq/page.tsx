@@ -19,7 +19,7 @@ const faqs = [
   },
   {
     q: "Shipping and returns?",
-    a: "Orders ship within 3-5 business days. Due to the nature of mystery collections and food safety, we cannot accept returns on opened items. If your order arrives damaged, contact us and we'll make it right.",
+    a: "We ship anywhere in the US by USPS. Shipping is $6 on a single pouch and free on 3 or more. Orders leave us within 3-5 business days. Due to the nature of mystery collections and food safety, we cannot accept returns on opened items. If your order arrives damaged, contact us and we'll make it right.",
   },
 ];
 

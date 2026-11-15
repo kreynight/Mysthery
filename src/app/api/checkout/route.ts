@@ -4,6 +4,7 @@ import { getStripe } from "@/lib/stripe";
 import { getMixRules, getMixSetting, getPublicTeas, snapshotRecipe } from "@/lib/teas";
 import { validateMix } from "@/lib/mix";
 import { parseRecipeItems, recipeText } from "@/lib/recipe";
+import { parseSize, priceTiers, shippingFor, shippingOption, sizeLabel, type PackSize } from "@/lib/pricing";
 
 /** Accepts ["id", ...] (older pages) or [{ id, parts }, ...]. Parts are 1 to 3. */
 function parseMix(mix: unknown): { id: string; parts: number }[] | null {
@@ -19,7 +20,7 @@ function parseMix(mix: unknown): { id: string; parts: number }[] | null {
   return out;
 }
 
-async function mixCheckout(req: NextRequest, mix: unknown) {
+async function mixCheckout(req: NextRequest, mix: unknown, size: PackSize) {
   const wanted = parseMix(mix);
   if (!wanted) return NextResponse.json({ error: "Invalid mix." }, { status: 400 });
   const [teas, rules, setting] = await Promise.all([getPublicTeas(), getMixRules(), getMixSetting()]);
@@ -35,8 +36,9 @@ async function mixCheckout(req: NextRequest, mix: unknown) {
   const recipe = await snapshotRecipe(
     chosen.map((t, i) => ({ ingredientId: t.id, name: t.name, parts: wanted[i].parts })),
     setting.packGrams,
-    1
+    size
   );
+  const amount = priceTiers(setting.price, setting.price3, setting.price5)[size];
   const names = chosen
     .map((t, i) => (wanted[i].parts > 1 ? `${t.name} (${wanted[i].parts} parts)` : t.name))
     .join(" + ");
@@ -49,20 +51,22 @@ async function mixCheckout(req: NextRequest, mix: unknown) {
         price_data: {
           currency: "usd",
           product_data: {
-            name: "Custom Mysthérie mix",
+            name: `Custom Mysthérie mix, ${sizeLabel(size)}`,
             description: names.slice(0, 500),
           },
-          unit_amount: setting.price,
+          unit_amount: amount,
         },
         quantity: 1,
       },
     ],
     metadata: {
       kind: "mix",
+      pouches: String(size),
       teaIds: chosen.map((t) => t.id).join(",").slice(0, 500),
       blend: recipe ? recipeText(recipe) : "",
     },
     shipping_address_collection: { allowed_countries: ["US"] },
+    shipping_options: [shippingOption(size)],
     success_url: `${origin}/success`,
     cancel_url: `${origin}/mix`,
   });
@@ -72,9 +76,9 @@ async function mixCheckout(req: NextRequest, mix: unknown) {
       dropId: null,
       mixItems: names,
       recipe: recipe ? (recipe as object) : undefined,
-      quantity: 1,
+      quantity: size,
       stripeSessionId: session.id,
-      totalAmount: setting.price,
+      totalAmount: amount + shippingFor(size),
       status: "pending",
     },
   });
@@ -85,11 +89,14 @@ async function mixCheckout(req: NextRequest, mix: unknown) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    if (body && body.mix !== undefined) return await mixCheckout(req, body.mix);
+    const size = parseSize(body?.size ?? 1);
+    if (!size) return NextResponse.json({ error: "Pick 1, 3 or 5 pouches." }, { status: 400 });
+    if (body && body.mix !== undefined) return await mixCheckout(req, body.mix, size);
 
-    const { dropId, quantity = 1 } = body;
+    const { dropId } = body;
+    const quantity: number = size;
 
-    if (!dropId || quantity < 1 || quantity > 10) {
+    if (!dropId) {
       return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     }
 
@@ -101,13 +108,14 @@ export async function POST(req: NextRequest) {
 
     if (drop.batchQuantityRemaining < quantity) {
       return NextResponse.json(
-        { error: `Only ${drop.batchQuantityRemaining} remaining.` },
+        { error: `Only ${drop.batchQuantityRemaining} pouches left in this batch.` },
         { status: 400 }
       );
     }
 
     const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "";
     const recipe = await snapshotRecipe(parseRecipeItems(drop.recipe), drop.packGrams || 28, quantity);
+    const amount = priceTiers(drop.price, drop.price3, drop.price5)[size];
 
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",
@@ -116,13 +124,13 @@ export async function POST(req: NextRequest) {
           price_data: {
             currency: "usd",
             product_data: {
-              name: drop.name,
+              name: `${drop.name}, ${sizeLabel(size)}`,
               description: drop.vibeLine || "Mystery tea drop",
               images: drop.images.length > 0 ? [drop.images[0]] : [],
             },
-            unit_amount: drop.price,
+            unit_amount: amount,
           },
-          quantity,
+          quantity: 1,
         },
       ],
       metadata: {
@@ -131,6 +139,7 @@ export async function POST(req: NextRequest) {
         blend: recipe ? recipeText(recipe) : "",
       },
       shipping_address_collection: { allowed_countries: ["US"] },
+      shipping_options: [shippingOption(quantity)],
       success_url: `${origin}/success`,
       cancel_url: `${origin}/cancel`,
     });
@@ -142,7 +151,7 @@ export async function POST(req: NextRequest) {
         quantity,
         recipe: recipe ? (recipe as object) : undefined,
         stripeSessionId: session.id,
-        totalAmount: drop.price * quantity,
+        totalAmount: amount + shippingFor(quantity),
         status: "pending",
       },
     });

@@ -12,7 +12,9 @@ model Drop {
   id                     String    @id @default(uuid())
   name                   String
   slug                   String    @unique
-  price                  Int       // cents
+  price                  Int       // cents, 1 pouch
+  price3                 Int?      // cents, 3 pouches
+  price5                 Int?      // cents, 5 pouches
   images                 String[]  // URLs
   vibeLine               String?   // 6-10 word vibe line
   effectType             String?   // Calming / Energizing / Balancing / Neutral
@@ -90,7 +92,9 @@ model MixSetting {
   id        String   @id @default("default")
   minTeas   Int      @default(2)
   maxTeas   Int      @default(3)
-  price     Int      @default(1600) // cents
+  price     Int      @default(1600) // cents, 1 pouch
+  price3    Int?     // cents, 3 pouches
+  price5    Int?     // cents, 5 pouches
   packGrams Int      @default(28)
   isEnabled Boolean  @default(true)
   updatedAt DateTime @default(now()) @updatedAt

@@ -41,6 +41,8 @@ export default function EditDropPage({ params }: EditDropPageProps) {
     name: drop.name as string,
     slug: drop.slug as string,
     price: ((drop.price as number) / 100).toFixed(2),
+    price3: drop.price3 ? ((drop.price3 as number) / 100).toFixed(2) : "",
+    price5: drop.price5 ? ((drop.price5 as number) / 100).toFixed(2) : "",
     images: (drop.images as string[]) || [],
     vibeLine: (drop.vibeLine as string) || "",
     effectType: (drop.effectType as string) || "",

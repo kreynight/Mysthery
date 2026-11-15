@@ -53,6 +53,8 @@ export interface MixSettingLike {
   minTeas: number;
   maxTeas: number;
   price: number;
+  price3?: number | null;
+  price5?: number | null;
   isEnabled: boolean;
   packGrams: number;
 }
@@ -135,6 +137,7 @@ export function caffeineTier(level: string | null): CaffeineTier {
 
 // Flavor directions a customer can ask the generator for.
 export const FLAVORS: Record<string, { label: string; words: string[]; families?: string[] }> = {
+  sweet: { label: "Sweet", words: ["sweet", "honey", "caramel", "vanilla", "chocolate", "cocoa", "candy", "sugar", "licorice", "nectar"] },
   floral: { label: "Floral", words: ["floral", "flower", "rose", "lavender", "osmanthus", "muscatel", "jasmine", "hibiscus"] },
   fruity: { label: "Fruity", words: ["fruit", "berry", "peach", "mango", "apple", "cherry", "plum", "apricot", "date", "currant"] },
   citrus: { label: "Citrus", words: ["citrus", "lemon", "bergamot", "orange", "zoranj", "sitwonel", "sitwonèl", "lime"] },

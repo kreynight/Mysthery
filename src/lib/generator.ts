@@ -162,16 +162,17 @@ const ADJ: Record<string, string[]> = {
   bright: ["Golden", "Sunlit", "Bright", "Clear"],
   focused: ["Steady", "Clear", "Keen", "True"],
   cozy: ["Ember", "Hearth", "Amber", "Woolen"],
-  grounded: ["Rooted", "Deep", "Forest", "Ancient"],
+  grounded: ["Rooted", "Deep", "Mossy", "Ancient"],
   any: ["Hidden", "Wandering", "Secret", "Quiet", "Velvet"],
 };
 const NOUN: Record<string, string[]> = {
+  sweet: ["Nectar", "Honey", "Treat"],
   floral: ["Garden", "Bloom", "Petal"],
   fruity: ["Orchard", "Harvest", "Grove"],
   citrus: ["Zest", "Grove", "Morning"],
   spiced: ["Spice Road", "Hearth", "Ember"],
   malty: ["Hearth", "Field", "Loaf"],
-  earthy: ["Forest Floor", "Root", "Cellar"],
+  earthy: ["Woodland", "Root", "Cellar"],
   fresh: ["Meadow", "Rain", "Leaf"],
   any: ["Path", "Hour", "Trail"],
 };
@@ -185,6 +186,7 @@ export function mixName(items: GeneratedItem[], input: GeneratorInput): string {
 }
 
 const SHORT: Record<string, string> = {
+  sweet: "sweet",
   floral: "floral",
   fruity: "fruity",
   citrus: "citrusy",

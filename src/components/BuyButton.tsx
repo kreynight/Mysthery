@@ -2,58 +2,44 @@
 
 import { useState } from "react";
 import { formatPrice } from "@/lib/format";
+import SizePicker from "@/components/SizePicker";
+import { FREE_SHIP_FROM, SHIPPING_SINGLE, type PackSize, type PriceTiers } from "@/lib/pricing";
 
 interface BuyButtonProps {
   dropId: string;
-  price: number;
+  tiers: PriceTiers;
   remaining: number;
+  initialSize?: PackSize;
 }
 
-export default function BuyButton({ dropId, price, remaining }: BuyButtonProps) {
-  const [quantity, setQuantity] = useState(1);
+export default function BuyButton({ dropId, tiers, remaining, initialSize = 1 }: BuyButtonProps) {
+  const [size, setSize] = useState<PackSize>(initialSize);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const soldOut = remaining <= 0;
-  const maxQty = Math.min(remaining, 10);
 
   const handleBuy = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dropId, quantity }),
+        body: JSON.stringify({ dropId, size }),
       });
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.error || "Something went wrong.");
-      }
+      if (data.url) window.location.href = data.url;
+      else setError(data.error || "Something went wrong.");
     } catch {
-      alert("Something went wrong. Please try again.");
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      {!soldOut && maxQty > 1 && (
-        <div className="flex items-center gap-3">
-          <label className="text-xs tracking-wide uppercase text-stone-500">Qty</label>
-          <select
-            value={quantity}
-            onChange={(e) => setQuantity(Number(e.target.value))}
-            className="border border-stone-300 rounded-full px-4 py-2 text-sm bg-[#f5f7ef]"
-          >
-            {Array.from({ length: maxQty }, (_, i) => i + 1).map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+    <div className="space-y-3">
+      {!soldOut && <SizePicker tiers={tiers} value={size} onChange={setSize} remaining={remaining} />}
       <button
         onClick={handleBuy}
         disabled={soldOut || loading}
@@ -63,12 +49,16 @@ export default function BuyButton({ dropId, price, remaining }: BuyButtonProps) 
             : "bg-[#3d4a3a] text-[#f5f7ef] hover:bg-[#2b3a28]"
         }`}
       >
-        {loading
-          ? "Processing..."
-          : soldOut
-          ? "Sold Out"
-          : `Buy Now \u00b7 ${formatPrice(price * quantity)}`}
+        {loading ? "Processing..." : soldOut ? "Sold Out" : `Buy ${size === 1 ? "1 pouch" : `${size} pouches`} · ${formatPrice(tiers[size])}`}
       </button>
+      {!soldOut && (
+        <p className="text-xs text-stone-500 text-center">
+          {size >= FREE_SHIP_FROM
+            ? "Free shipping"
+            : `${formatPrice(SHIPPING_SINGLE)} shipping. Free on ${FREE_SHIP_FROM} or more.`}
+        </p>
+      )}
+      {error && <p className="text-sm text-[#8b3a2b] text-center">{error}</p>}
     </div>
   );
 }

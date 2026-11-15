@@ -1,22 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { FAMILIES, FAMILY_TINT, validateMix, type MixSettingLike, type PublicTea, type RuleLike } from "@/lib/mix";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { formatPrice } from "@/lib/format";
+import SizePicker from "@/components/SizePicker";
+import type { MixSettingLike, PublicTea, RuleLike } from "@/lib/mix";
 import {
-  CAFFEINE_PREFS,
-  FLAVORS,
-  MOODS,
-  TIME_PREFS,
-  addOptions,
   generateMix,
   mixName,
   mixSummary,
-  swapOptions,
+  type CaffeinePref,
   type GeneratedItem,
   type GeneratorInput,
 } from "@/lib/generator";
-import { buildOrderRecipe, packLabel } from "@/lib/recipe";
-import { formatPrice } from "@/lib/format";
+import { FREE_SHIP_FROM, SHIPPING_SINGLE, priceTiers, type PackSize } from "@/lib/pricing";
 
 interface Props {
   teas: PublicTea[];
@@ -24,256 +20,283 @@ interface Props {
   setting: MixSettingLike;
 }
 
-function Chips<T extends string>({
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  label: string;
-  options: { key: T; label: string }[];
-  value: T;
-  onChange: (v: T) => void;
-}) {
+type Pick = { key: string; label: string };
+
+const TASTES: Pick[] = [
+  { key: "sweet", label: "Sweet" },
+  { key: "floral", label: "Floral" },
+  { key: "fruity", label: "Fruity" },
+  { key: "citrus", label: "Citrus" },
+  { key: "spiced", label: "Spiced" },
+  { key: "earthy", label: "Earthy" },
+  { key: "fresh", label: "Fresh" },
+];
+const FEELS: Pick[] = [
+  { key: "calm", label: "Calm" },
+  { key: "cozy", label: "Cozy" },
+  { key: "bright", label: "Uplifting" },
+  { key: "focused", label: "Focused" },
+];
+const CAFFEINE: { key: CaffeinePref; label: string }[] = [
+  { key: "none", label: "No caffeine" },
+  { key: "some", label: "A little" },
+  { key: "full", label: "Full kick" },
+];
+
+const SPIN_MS = [900, 1250, 1600];
+
+function reelWord(tea: PublicTea): string {
+  const words = tea.name.replace(/^Kusmi Tea\s*-\s*/i, "").replace(/\(.*?\)/g, "").trim().split(/\s+/);
+  return words.slice(0, 3).join(" ");
+}
+
+function Chip({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
   return (
-    <fieldset>
-      <legend className="text-[11px] tracking-[0.25em] uppercase text-[#7a5a3c] mb-2">{label}</legend>
-      <div className="flex flex-wrap gap-2">
-        {options.map((o) => (
-          <button
-            key={o.key}
-            type="button"
-            aria-pressed={value === o.key}
-            onClick={() => onChange(o.key)}
-            className={`rounded-full px-4 py-2 text-sm ring-1 transition-colors ${
-              value === o.key
-                ? "bg-[#3d4a3a] ring-[#3d4a3a] text-[#f5f7ef]"
-                : "bg-[#f5f7ef] ring-stone-300 text-[#2b3a28] hover:ring-[#5e7a4c]"
-            }`}
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
-    </fieldset>
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={`rounded-full px-3.5 py-2 text-sm transition-colors border min-h-[40px] ${
+        active
+          ? "bg-[#2b3a28] text-[#f5f7ef] border-[#2b3a28]"
+          : "bg-[#fbf8f2] text-[#2b3a28] border-stone-300 hover:border-[#2b3a28]"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 
-const MOOD_OPTIONS = [...Object.entries(MOODS).map(([key, m]) => ({ key, label: m.label })), { key: "any", label: "Surprise me" }];
-const FLAVOR_OPTIONS = [...Object.entries(FLAVORS).map(([key, f]) => ({ key, label: f.label })), { key: "any", label: "Surprise me" }];
+function Reel({ words, final, spinning, delay }: { words: string[]; final: string; spinning: boolean; delay: number }) {
+  const strip = useMemo(() => [...words, ...words], [words]);
+  return (
+    <div className="relative h-14 sm:h-16 flex-1 min-w-0 overflow-hidden rounded-xl bg-[#fbf6ef] ring-1 ring-[#2b3a28]/20 shadow-inner">
+      {spinning ? (
+        <div
+          className="reel-strip absolute inset-x-0 top-0"
+          style={{ animationDuration: `${0.5 + delay * 0.08}s` }}
+        >
+          {strip.map((w, i) => (
+            <div key={i} className="h-14 sm:h-16 flex items-center justify-center px-1.5 text-[11px] sm:text-xs text-[#5b4532] blur-[0.6px] text-center leading-tight">
+              {w}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="reel-land h-full flex items-center justify-center px-1.5 text-[11px] sm:text-sm font-medium text-[#2b3a28] text-center leading-tight">
+          {final}
+        </div>
+      )}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-3 bg-gradient-to-b from-[#2b3a28]/15 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-3 bg-gradient-to-t from-[#2b3a28]/15 to-transparent" />
+    </div>
+  );
+}
 
 export default function MixGenerator({ teas, rules, setting }: Props) {
-  const [input, setInput] = useState<GeneratorInput>({ mood: "any", flavor: "any", caffeine: "any", time: "any" });
+  const [taste, setTaste] = useState<string | null>(null);
+  const [feel, setFeel] = useState<string | null>(null);
+  const [caffeine, setCaffeine] = useState<CaffeinePref | null>(null);
   const [items, setItems] = useState<GeneratedItem[] | null>(null);
+  const [spinning, setSpinning] = useState<boolean[]>([false, false, false]);
+  const [pulled, setPulled] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const [noMatch, setNoMatch] = useState(false);
+  const [size, setSize] = useState<PackSize>(1);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const timers = useRef<number[]>([]);
+  const resultRef = useRef<HTMLDivElement>(null);
 
-  function generate(next: GeneratorInput = input) {
-    setError("");
-    const result = generateMix(teas, rules, setting, next);
-    setNoMatch(!result);
-    if (result) setItems(result);
-  }
+  const tiers = priceTiers(setting.price, setting.price3, setting.price5);
+  const input: GeneratorInput = {
+    mood: feel || "any",
+    flavor: taste || "any",
+    caffeine: caffeine || "any",
+    time: caffeine === "none" || feel === "calm" ? "evening" : caffeine === "full" ? "morning" : "any",
+  };
+  const reelWords = useMemo(() => {
+    const shuffled = [...teas].sort(() => Math.random() - 0.5).slice(0, 14);
+    return shuffled.map(reelWord);
+  }, [teas]);
 
-  // First blend appears once the page is in the browser, so every visit starts with a surprise.
-  useEffect(() => {
-    generate();
+  useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
+
+  const isSpinning = spinning.some(Boolean);
+
+  const pull = useCallback(() => {
+    if (isSpinning) return;
+    timers.current.forEach((t) => window.clearTimeout(t));
+    timers.current = [];
+    setError(null);
+    const mix = generateMix(teas, rules, setting, input);
+    if (!mix) {
+      setNoMatch(true);
+      setItems(null);
+      setRevealed(false);
+      return;
+    }
+    setNoMatch(false);
+    setRevealed(false);
+    setItems(mix);
+    setPulled(true);
+    timers.current.push(window.setTimeout(() => setPulled(false), 380));
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(30);
+
+    const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setSpinning([false, false, false]);
+      setRevealed(true);
+      return;
+    }
+    setSpinning([true, true, true]);
+    SPIN_MS.forEach((ms, i) => {
+      timers.current.push(
+        window.setTimeout(() => {
+          setSpinning((s) => s.map((v, j) => (j === i ? false : v)));
+          if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(10);
+        }, ms)
+      );
+    });
+    timers.current.push(
+      window.setTimeout(() => {
+        setRevealed(true);
+        window.setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 60);
+      }, SPIN_MS[2] + 250)
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isSpinning, teas, rules, setting, taste, feel, caffeine]);
 
-  function update(patch: Partial<GeneratorInput>) {
-    const next = { ...input, ...patch };
-    setInput(next);
-    generate(next);
-  }
-
-  const current = items?.map((i) => i.tea) || [];
-  const invalid = items ? validateMix(current, rules, setting) : "Generate a mix first.";
-  const recipe = useMemo(
-    () =>
-      items
-        ? buildOrderRecipe(
-            items.map((i) => ({ inventoryNo: i.tea.inventoryNo, name: i.tea.name, brand: null, parts: i.parts })),
-            setting.packGrams,
-            1
-          )
-        : null,
-    [items, setting.packGrams]
-  );
-
-  function setTeas(next: PublicTea[]) {
-    setError("");
-    setItems(next.map((tea, i) => ({ tea, parts: i === 0 && next.length > 1 ? 2 : 1 })));
-  }
-
-  function swap(index: number, id: string) {
-    const tea = teas.find((t) => t.id === id);
-    if (!tea) return;
-    setTeas(current.map((t, i) => (i === index ? tea : t)));
-  }
-
-  function makeLead(index: number) {
-    setTeas([current[index], ...current.filter((_, i) => i !== index)]);
-  }
-
-  async function checkout() {
+  const buy = async () => {
     if (!items) return;
     setLoading(true);
-    setError("");
+    setError(null);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mix: items.map((i) => ({ id: i.tea.id, parts: i.parts })) }),
+        body: JSON.stringify({ mix: items.map((i) => ({ id: i.tea.id, parts: i.parts })), size }),
       });
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-        return;
-      }
-      setError(data.error || "Something went wrong. Please try again.");
+      if (data.url) window.location.href = data.url;
+      else setError(data.error || "Something went wrong.");
     } catch {
       setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }
+  };
 
-  const canAdd = !!items && items.length < setting.maxTeas;
-  const canRemove = !!items && items.length > setting.minTeas;
-  const adds = items && canAdd ? addOptions(current, teas, rules, input).slice(0, 10) : [];
+  const finals = [0, 1, 2].map((i) => (items && items[i] ? reelWord(items[i].tea) : i === 2 && items ? "Pure" : "?"));
+  const totalParts = items ? items.reduce((s, i) => s + i.parts, 0) : 1;
+  const toggle = <T,>(v: T | null, k: T, set: (x: T | null) => void) => set(v === k ? null : k);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_24rem] gap-8 items-start">
-      <section className="rounded-3xl bg-[#e1e9d6] p-6 md:p-8 space-y-6" aria-label="Your choices">
+    <div className="max-w-xl mx-auto">
+      {/* Quick picks */}
+      <div className="space-y-3 mb-6">
+        <p className="text-sm text-stone-500 text-center">Tap what you&apos;re in the mood for, or skip straight to the lever.</p>
+        {[
+          { title: "Taste", list: TASTES, value: taste, set: setTaste },
+          { title: "Feel", list: FEELS, value: feel, set: setFeel },
+        ].map((row) => (
+          <div key={row.title}>
+            <p className="text-[10px] tracking-[0.25em] uppercase text-[#7a5a3c] mb-1.5">{row.title}</p>
+            <div className="flex flex-wrap gap-2">
+              {row.list.map((p) => (
+                <Chip key={p.key} label={p.label} active={row.value === p.key} onClick={() => toggle(row.value, p.key, row.set)} />
+              ))}
+            </div>
+          </div>
+        ))}
         <div>
-          <h2 className="font-display text-2xl font-light text-[#2b3a28]">Tell us how you want it</h2>
-          <p className="text-sm text-stone-600 mt-1">
-            We pull {setting.minTeas} to {setting.maxTeas} teas from the shelf that brew well together.
-          </p>
+          <p className="text-[10px] tracking-[0.25em] uppercase text-[#7a5a3c] mb-1.5">Caffeine</p>
+          <div className="flex flex-wrap gap-2">
+            {CAFFEINE.map((p) => (
+              <Chip key={p.key} label={p.label} active={caffeine === p.key} onClick={() => toggle(caffeine, p.key, setCaffeine)} />
+            ))}
+          </div>
         </div>
-        <Chips label="Mood" options={MOOD_OPTIONS} value={input.mood} onChange={(mood) => update({ mood })} />
-        <Chips label="Flavor" options={FLAVOR_OPTIONS} value={input.flavor} onChange={(flavor) => update({ flavor })} />
-        <Chips label="Caffeine" options={CAFFEINE_PREFS} value={input.caffeine} onChange={(caffeine) => update({ caffeine })} />
-        <Chips label="Time of day" options={TIME_PREFS} value={input.time} onChange={(time) => update({ time })} />
-      </section>
+      </div>
 
-      <aside className="w-full lg:sticky lg:top-6 rounded-3xl bg-[#2b3a28] text-[#f5f7ef] p-6" aria-live="polite">
-        <p className="text-[11px] tracking-[0.3em] uppercase text-[#d9c3a5] mb-2">Your mix</p>
-        {noMatch ? (
-          <p className="text-sm text-[#d3dec6] mb-5">
-            Nothing on the shelf fits all of that right now. Try loosening one choice.
-          </p>
-        ) : !items ? (
-          <p className="text-sm text-[#d3dec6] mb-5">Pouring...</p>
-        ) : (
-          <>
-            <h3 className="font-display text-3xl font-light mb-1">{mixName(items, input)}</h3>
-            <p className="text-sm text-[#d3dec6] mb-5">{mixSummary(items)}</p>
-            <ul className="space-y-4 mb-4">
-              {items.map((item, idx) => {
-                const options = swapOptions(current, idx, teas, rules, input).slice(0, 10);
-                const grams = recipe?.lines[idx]?.grams;
-                return (
-                  <li key={item.tea.id} className="rounded-2xl bg-[#3d4a3a] p-4">
-                    <div className="flex items-start gap-3">
-                      <span
-                        className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-[#f5f7ef]/40"
-                        style={{ backgroundColor: FAMILY_TINT[item.tea.family] }}
-                        aria-hidden="true"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium leading-snug">{item.tea.name}</p>
-                        <p className="text-xs text-[#d3dec6] mt-0.5">
-                          {FAMILIES[item.tea.family]?.label.replace(/s$/, "") || "Tea"} · {item.parts}{" "}
-                          {item.parts === 1 ? "part" : "parts"}
-                          {grams ? ` · ${grams} g` : ""}
-                          {idx === 0 && items.length > 1 ? " · the lead" : ""}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
-                      {options.length > 0 && (
-                        <label className="flex items-center gap-2">
-                          <span className="sr-only">Swap {item.tea.name} for</span>
-                          <select
-                            value=""
-                            onChange={(e) => swap(idx, e.target.value)}
-                            className="rounded-full bg-[#2b3a28] text-[#f5f7ef] ring-1 ring-[#f5f7ef]/30 px-3 py-1.5 max-w-[12rem]"
-                          >
-                            <option value="">Swap for...</option>
-                            {options.map((o) => (
-                              <option key={o.id} value={o.id}>
-                                {o.name}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                      )}
-                      {idx > 0 && (
-                        <button type="button" onClick={() => makeLead(idx)} className="underline underline-offset-2 text-[#d3dec6] hover:text-white">
-                          Make lead
-                        </button>
-                      )}
-                      {canRemove && (
-                        <button
-                          type="button"
-                          onClick={() => setTeas(current.filter((_, i) => i !== idx))}
-                          className="underline underline-offset-2 text-[#d3dec6] hover:text-white"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-            {canAdd && adds.length > 0 && (
-              <label className="block mb-4 text-xs">
-                <span className="sr-only">Add a tea</span>
-                <select
-                  value=""
-                  onChange={(e) => {
-                    const tea = teas.find((t) => t.id === e.target.value);
-                    if (tea) setTeas([...current, tea]);
-                  }}
-                  className="w-full rounded-full bg-[#2b3a28] text-[#f5f7ef] ring-1 ring-[#f5f7ef]/30 px-4 py-2"
-                >
-                  <option value="">Add a tea...</option>
-                  {adds.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            <p className="text-xs text-[#d3dec6] mb-5">One {packLabel(setting.packGrams)}.</p>
-          </>
-        )}
+      {/* The machine */}
+      <div className="relative rounded-[28px] bg-gradient-to-b from-[#3d4a3a] to-[#2b3a28] p-4 sm:p-5 pr-16 sm:pr-20 shadow-lg">
+        <p className="text-center text-[10px] tracking-[0.35em] uppercase text-[#d9c3a5] mb-3">The blend machine</p>
+        <div className="flex gap-2">
+          {[0, 1, 2].map((i) => (
+            <Reel key={i} words={reelWords} final={finals[i]} spinning={spinning[i]} delay={i} />
+          ))}
+        </div>
         <button
           type="button"
-          onClick={() => generate()}
-          className="w-full rounded-full border border-[#f5f7ef]/60 py-3 text-xs tracking-widest uppercase font-semibold hover:bg-[#f5f7ef]/10 transition-colors mb-3"
+          onClick={pull}
+          disabled={isSpinning}
+          className="mt-4 w-full rounded-full bg-[#d9c3a5] text-[#2b3a28] py-3.5 text-sm font-semibold tracking-widest uppercase hover:bg-[#e5cfae] transition-colors disabled:opacity-70"
         >
-          {items ? "Generate another" : "Generate my mix"}
+          {isSpinning ? "Blending..." : items ? "Pull again" : "Pull the lever"}
         </button>
+
+        {/* Lever */}
         <button
           type="button"
-          onClick={checkout}
-          disabled={!!invalid || loading || noMatch}
-          className="w-full rounded-full bg-[#f5f7ef] text-[#2b3a28] py-3.5 text-xs tracking-widest uppercase font-semibold hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label="Pull the lever"
+          onClick={pull}
+          disabled={isSpinning}
+          className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-36 flex flex-col items-center justify-center"
         >
-          {loading ? "Opening checkout..." : `Buy this mix · ${formatPrice(setting.price)}`}
+          <span className="absolute bottom-1/2 w-2 h-16 origin-bottom rounded-full bg-gradient-to-r from-stone-300 to-stone-400 transition-transform duration-300 ease-in"
+            style={{ transform: pulled ? "scaleY(-1)" : "scaleY(1)", transitionDuration: pulled ? "220ms" : "450ms" }}
+          >
+            <span className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-to-br from-[#c96b52] to-[#8b3a2b] shadow-md ring-2 ring-[#2b3a28]/30" />
+          </span>
+          <span className="relative w-6 h-6 rounded-full bg-[#1e2a1c] ring-2 ring-stone-400/60" />
         </button>
-        {items && invalid && <p className="text-xs text-[#e5cfae] mt-3">{invalid}</p>}
-        {error && (
-          <p role="alert" className="text-xs text-[#f2c4b8] mt-3">
-            {error}
+      </div>
+
+      {noMatch && (
+        <p className="mt-5 text-sm text-center text-[#8b3a2b]">
+          Nothing on the shelf fits all of that right now. Try dropping one pick.
+        </p>
+      )}
+
+      {/* Result */}
+      {items && revealed && (
+        <div ref={resultRef} className="reveal mt-5 rounded-3xl bg-[#fbf8f2] ring-1 ring-stone-200 p-5 sm:p-6">
+          <p className="text-[10px] tracking-[0.3em] uppercase text-[#7a5a3c]">Your blend</p>
+          <div className="flex items-baseline justify-between gap-3 mt-1">
+            <h3 className="font-display text-2xl sm:text-3xl text-[#2b3a28]">{mixName(items, input)}</h3>
+            <p className="text-xl font-semibold text-[#5b4532] whitespace-nowrap">{formatPrice(tiers[size])}</p>
+          </div>
+          <p className="text-sm text-stone-600 mt-1">{mixSummary(items)} Blended by hand when you order.</p>
+
+          <ul className="mt-4 space-y-1.5">
+            {items.map(({ tea, parts }) => (
+              <li key={tea.id} className="flex items-center gap-3 text-sm">
+                <span className="w-10 shrink-0 text-xs font-semibold text-[#7a5a3c]">
+                  {Math.round((parts / totalParts) * 100)}%
+                </span>
+                <span className="min-w-0 truncate text-[#2b3a28]">{tea.name}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-5">
+            <SizePicker tiers={tiers} value={size} onChange={setSize} />
+          </div>
+          <button
+            type="button"
+            onClick={buy}
+            disabled={loading}
+            className="mt-3 w-full py-4 rounded-full bg-[#3d4a3a] text-[#f5f7ef] text-sm tracking-widest uppercase hover:bg-[#2b3a28] transition-colors disabled:opacity-70"
+          >
+            {loading ? "Processing..." : `Buy this blend · ${formatPrice(tiers[size])}`}
+          </button>
+          <p className="text-xs text-stone-500 text-center mt-2">
+            {size >= FREE_SHIP_FROM ? "Free shipping" : `${formatPrice(SHIPPING_SINGLE)} shipping. Free on ${FREE_SHIP_FROM} or more.`}
           </p>
-        )}
-      </aside>
+          {error && <p className="text-sm text-[#8b3a2b] text-center mt-2">{error}</p>}
+        </div>
+      )}
     </div>
   );
 }
