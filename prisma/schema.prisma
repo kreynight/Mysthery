@@ -25,6 +25,12 @@ model Drop {
   batchQuantityTotal     Int
   batchQuantityRemaining Int
   dropStartDate          DateTime?
+  recipe                 Json?     // admin only: [{ ingredientId, name, parts }]
+  mood                   String?
+  flavorDirection        String?
+  bestTime               String?
+  description            String?
+  packGrams              Int       @default(28)
   isActive               Boolean   @default(true)
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
@@ -36,6 +42,7 @@ model Order {
   dropId          String?
   drop            Drop?    @relation(fields: [dropId], references: [id])
   mixItems        String?  // custom mix: tea names, comma-separated
+  recipe          Json?    // snapshot at checkout: { packGrams, lines: [{ inventoryNo, name, brand, parts, grams }] }
   quantity        Int      @default(1)
   email           String?
   stripeSessionId String   @unique
@@ -84,6 +91,7 @@ model MixSetting {
   minTeas   Int      @default(2)
   maxTeas   Int      @default(3)
   price     Int      @default(1600) // cents
+  packGrams Int      @default(28)
   isEnabled Boolean  @default(true)
   updatedAt DateTime @default(now()) @updatedAt
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthenticated } from "@/lib/auth";
+import { dropFields } from "@/lib/dropFields";
 
 export async function GET() {
   if (!(await isAdminAuthenticated())) {
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
         batchQuantityRemaining: parseInt(data.batchQuantityTotal, 10),
         dropStartDate: data.dropStartDate ? new Date(data.dropStartDate) : null,
         isActive: data.isActive ?? true,
+        ...dropFields(data),
       },
     });
 

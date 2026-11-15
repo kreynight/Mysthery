@@ -5,6 +5,7 @@ import BuyButton from "@/components/BuyButton";
 import { FlowerSprig } from "@/components/Botanicals";
 import Link from "next/link";
 import { formatPrice, formatRemaining } from "@/lib/format";
+import { batchCaffeine, packLabel } from "@/lib/recipe";
 
 export const dynamic = "force-dynamic";
 
@@ -32,15 +33,22 @@ export default async function CollectionPage({ params }: PageProps) {
 
   const batchNo = extractBatchNo(drop.dropNotes);
   
+  // Descriptive but never names the teas: the recipe stays in the admin.
+  const caffeine = batchCaffeine(drop.caffeine);
+  const highlights: { label: string; value: string }[] = [];
+  if (drop.mood || drop.effectType) highlights.push({ label: "Mood", value: drop.mood || drop.effectType || "" });
+  if (drop.flavorDirection || drop.tastingNotes)
+    highlights.push({ label: "Flavor", value: drop.flavorDirection || drop.tastingNotes || "" });
+  if (caffeine) highlights.push({ label: "Caffeine", value: caffeine });
+  if (drop.bestTime) highlights.push({ label: "Best time", value: drop.bestTime });
+
   const details: { label: string; value: string }[] = [];
-  if (drop.effectType) details.push({ label: "Effect", value: drop.effectType });
-  if (drop.caffeine) details.push({ label: "Caffeine", value: drop.caffeine });
-  if (drop.tastingNotes) details.push({ label: "Tasting Notes", value: drop.tastingNotes });
-  if (drop.ingredientMayInclude)
-    details.push({ label: "May Include", value: drop.ingredientMayInclude });
-  if (drop.steepGuide) details.push({ label: "Steep Guide", value: drop.steepGuide });
+  details.push({ label: "Pouch", value: packLabel(drop.packGrams || 28) });
+  details.push({ label: "Batch size", value: `${drop.batchQuantityTotal} pouches, then it's gone` });
+  if (drop.tastingNotes && drop.flavorDirection) details.push({ label: "Tasting notes", value: drop.tastingNotes });
+  if (drop.ingredientMayInclude) details.push({ label: "May include", value: drop.ingredientMayInclude });
+  if (drop.steepGuide) details.push({ label: "Steep guide", value: drop.steepGuide });
   if (drop.allergenNote) details.push({ label: "Allergens", value: drop.allergenNote });
-  if (drop.dropNotes) details.push({ label: "Collection Notes", value: drop.dropNotes });
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
@@ -61,7 +69,20 @@ export default async function CollectionPage({ params }: PageProps) {
             {drop.name}
           </h1>
           {drop.vibeLine && (
-            <p className="text-base italic text-stone-500 mb-5">{drop.vibeLine}</p>
+            <p className="text-base italic text-stone-500 mb-4">{drop.vibeLine}</p>
+          )}
+          {drop.description && (
+            <p className="text-sm text-stone-600 leading-relaxed mb-5">{drop.description}</p>
+          )}
+          {highlights.length > 0 && (
+            <dl className="grid grid-cols-2 gap-3 mb-6">
+              {highlights.map((h) => (
+                <div key={h.label} className="rounded-2xl bg-[#e1e9d6] px-4 py-3">
+                  <dt className="text-[10px] tracking-[0.2em] uppercase text-[#7a5a3c]">{h.label}</dt>
+                  <dd className="text-sm text-[#2b3a28] mt-0.5">{h.value}</dd>
+                </div>
+              ))}
+            </dl>
           )}
 
           <div className="flex items-baseline gap-4 mb-2">
@@ -104,8 +125,8 @@ export default async function CollectionPage({ params }: PageProps) {
             href="/mix"
             className="mt-10 block rounded-2xl bg-[#e1e9d6] px-6 py-5 text-sm text-[#2b3a28] hover:bg-[#d3dec6] transition-colors"
           >
-            <span className="font-display text-lg">Rather choose the teas yourself?</span>
-            <span className="block text-stone-500 mt-1">Make your own mix from the tea library.</span>
+            <span className="font-display text-lg">Want one made for your mood?</span>
+            <span className="block text-stone-500 mt-1">Try the mix generator.</span>
           </Link>
         </div>
       </div>

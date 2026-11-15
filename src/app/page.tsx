@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import ProductCard from "@/components/ProductCard";
 import { LeafSprig, FlowerSprig, VineDivider } from "@/components/Botanicals";
 import { PHOTOS } from "@/lib/photos";
+import { batchCaffeine } from "@/lib/recipe";
 
 export const dynamic = "force-dynamic";
 
@@ -51,8 +52,8 @@ export default async function Home() {
                 Pick a mood.<br />We pick the tea.
               </h1>
               <p className="text-sm md:text-base text-[#e3eadb] leading-relaxed mb-7 max-w-md">
-                Mystery blends poured in small, numbered batches. Each one is new, so you
-                taste it before you know what&apos;s inside.
+                Mystery blends poured in tiny, numbered batches of about a dozen pouches. Each one
+                is new, so you taste it before you know what&apos;s inside.
               </p>
               <div className="flex flex-wrap gap-3">
                 <a
@@ -101,6 +102,9 @@ export default async function Home() {
                 vibeLine={drop.vibeLine}
                 image={drop.images[0]}
                 batchNo={extractBatchNo(drop.dropNotes)}
+                mood={drop.mood || drop.effectType}
+                caffeine={batchCaffeine(drop.caffeine)}
+                bestTime={drop.bestTime}
               />
             ))}
           </div>
@@ -121,10 +125,10 @@ export default async function Home() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#2a1f15]/90 via-[#2a1f15]/30 to-transparent" />
           <div className="relative p-8">
-            <p className="text-[11px] tracking-[0.3em] uppercase text-[#e5cfae] mb-2">Build your own</p>
+            <p className="text-[11px] tracking-[0.3em] uppercase text-[#e5cfae] mb-2">Mix generator</p>
             <h3 className="font-display text-3xl font-light text-[#fbf6ef] mb-2">Make a mix</h3>
             <p className="text-sm text-[#efe6da] max-w-sm">
-              Choose two or three teas from our library. We only let you pair what brews well together.
+              Pick a mood, a flavor and a time of day. We generate a blend that brews well together.
             </p>
           </div>
         </Link>

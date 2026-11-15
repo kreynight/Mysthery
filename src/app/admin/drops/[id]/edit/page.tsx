@@ -3,6 +3,7 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import DropForm from "@/components/DropForm";
+import { parseRecipeItems } from "@/lib/recipe";
 
 interface EditDropPageProps {
   params: Promise<{ id: string }>;
@@ -55,6 +56,12 @@ export default function EditDropPage({ params }: EditDropPageProps) {
       ? new Date(drop.dropStartDate as string).toISOString().split("T")[0]
       : "",
     isActive: drop.isActive as boolean,
+    mood: (drop.mood as string) || "",
+    flavorDirection: (drop.flavorDirection as string) || "",
+    bestTime: (drop.bestTime as string) || "",
+    description: (drop.description as string) || "",
+    packGrams: String((drop.packGrams as number) || 28),
+    recipe: parseRecipeItems(drop.recipe),
   };
 
   return (

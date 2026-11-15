@@ -54,18 +54,29 @@ export interface MixSettingLike {
   maxTeas: number;
   price: number;
   isEnabled: boolean;
+  packGrams: number;
 }
+
+export type CaffeineTier = "none" | "low" | "medium" | "high" | "unknown";
 
 export interface PublicTea {
   id: string;
   inventoryNo: number | null;
   name: string;
+  /** Tea type, without words like "blend". */
   category: string | null;
-  flavorNotes: string | null;
+  /** A very light note: two words at most per descriptor, two descriptors at most. */
+  note: string | null;
   caffeine: string;
-  culturalRoots: string | null;
+  caffeineTier: CaffeineTier;
   family: string;
   tags: string[];
+  /** Flavor directions this tea leans toward (keys of FLAVORS). */
+  flavors: string[];
+  /** Moods this tea suits (keys of MOODS). */
+  moods: string[];
+  /** Strongly bitter or single-purpose teas the generator avoids unless swapped in. */
+  harsh: boolean;
 }
 
 interface RawIngredient {
@@ -113,22 +124,91 @@ export function isCaffeinated(level: string | null): boolean {
   return /low|medium|high/.test(v);
 }
 
-export function toPublicTea(
-  ing: RawIngredient & { id: string; inventoryNo: number | null; culturalRoots: string | null }
-): PublicTea {
+export function caffeineTier(level: string | null): CaffeineTier {
+  const v = (level || "").toLowerCase();
+  if (!v || v.includes("verify") || v.includes("unknown")) return "unknown";
+  if (!isCaffeinated(level)) return "none";
+  if (v.includes("high")) return "high";
+  if (v.includes("medium")) return "medium";
+  return "low";
+}
+
+// Flavor directions a customer can ask the generator for.
+export const FLAVORS: Record<string, { label: string; words: string[]; families?: string[] }> = {
+  floral: { label: "Floral", words: ["floral", "flower", "rose", "lavender", "osmanthus", "muscatel", "jasmine", "hibiscus"] },
+  fruity: { label: "Fruity", words: ["fruit", "berry", "peach", "mango", "apple", "cherry", "plum", "apricot", "date", "currant"] },
+  citrus: { label: "Citrus", words: ["citrus", "lemon", "bergamot", "orange", "zoranj", "sitwonel", "sitwonèl", "lime"] },
+  spiced: { label: "Spiced", words: ["spice", "spiced", "chai", "cinnamon", "ginger", "warm", "cardamom", "licorice"] },
+  malty: { label: "Malty & bold", words: ["malty", "malt", "robust", "brisk", "bold", "honeyed", "toast", "classic"] },
+  earthy: { label: "Earthy & woody", words: ["earthy", "woody", "smoky", "mineral", "aged", "thick"], families: ["puerh"] },
+  fresh: { label: "Fresh & green", words: ["grassy", "umami", "fresh", "mint", "minty", "bright", "refreshing", "basil"], families: ["green", "mate"] },
+};
+
+// Moods a customer can ask the generator for.
+export const MOODS: Record<string, { label: string; words: string[]; families?: string[] }> = {
+  calm: { label: "Calm", words: ["calm", "sleep", "soothing", "relax", "evening", "stress", "unwind"], families: ["sleep", "white"] },
+  bright: { label: "Bright", words: ["uplift", "mood", "cheerful", "refreshing", "lifting", "bright"] },
+  focused: { label: "Focused", words: ["focus", "energy", "alert", "theanine", "energizing"] },
+  cozy: { label: "Cozy", words: ["warming", "comforting", "ritual", "afternoon", "spice", "chai"] },
+  grounded: { label: "Grounded", words: ["grounding", "earthy", "digest", "post-meal", "balance"], families: ["puerh"] },
+};
+
+function tagsFor(
+  dict: Record<string, { words: string[]; families?: string[] }>,
+  text: string,
+  family: string
+): string[] {
+  return Object.entries(dict)
+    .filter(([, d]) => d.families?.includes(family) || d.words.some((w) => text.includes(w)))
+    .map(([k]) => k);
+}
+
+/** Strips a tea's flavor text down to a couple of light words. */
+export function lightNote(flavorNotes: string | null | undefined): string | null {
+  if (!flavorNotes || /verify|unknown/i.test(flavorNotes)) return null;
+  const parts = flavorNotes
+    .replace(/\([^)]*\)/g, "")
+    .split(/[,/+;&]| w\/ | over | with |-/i)
+    .map((p) => p.trim().toLowerCase().replace(/\b(black |green |white )?teas?\b/g, "").trim())
+    .filter((p) => p && !/blend|flavorful|^w$|^herbal( medicinal)?$/.test(p))
+    .map((p) => p.split(/\s+/).slice(0, 2).join(" "));
+  const unique = [...new Set(parts)].slice(0, 2);
+  return unique.length ? unique.join(" · ") : null;
+}
+
+/** The tea's type, without "blend" so the library doesn't read like a list of blends. */
+export function lightCategory(category: string | null | undefined): string | null {
+  if (!category || /verify/i.test(category)) return null;
+  const c = category
+    .replace(/\([^)]*\)/g, "")
+    .replace(/\bblend\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return c ? c.charAt(0).toUpperCase() + c.slice(1).toLowerCase() : null;
+}
+
+export function toPublicTea(ing: RawIngredient & { id: string; inventoryNo: number | null }): PublicTea {
   const family = deriveFamily(ing);
   const tags: string[] = [];
   if (isCaffeinated(ing.caffeineLevel)) tags.push("caffeinated");
+  const flavorText = `${ing.name} ${ing.flavorNotes || ""}`.toLowerCase();
+  const moodText = `${ing.name} ${ing.wellnessFunction || ""} ${ing.flavorNotes || ""}`.toLowerCase();
+  const harsh =
+    /(very|intensely) bitter|bitter (citrus|earthy)|medicinal|sharp herbal/.test((ing.flavorNotes || "").toLowerCase()) ||
+    /fever|parasite|kidney|urinary|cleanse|throat|blood wash|sickness/.test((ing.wellnessFunction || "").toLowerCase());
   return {
     id: ing.id,
     inventoryNo: ing.inventoryNo,
     name: ing.name,
-    category: ing.category && !/verify/i.test(ing.category) ? ing.category : null,
-    flavorNotes: ing.flavorNotes && !/verify|unknown/i.test(ing.flavorNotes) ? ing.flavorNotes : null,
+    category: lightCategory(ing.category),
+    note: lightNote(ing.flavorNotes),
     caffeine: caffeineLabel(ing.caffeineLevel),
-    culturalRoots: ing.culturalRoots && !/verify|unknown/i.test(ing.culturalRoots) ? ing.culturalRoots : null,
+    caffeineTier: caffeineTier(ing.caffeineLevel),
     family,
     tags,
+    flavors: tagsFor(FLAVORS, flavorText, family),
+    moods: tagsFor(MOODS, moodText, family),
+    harsh,
   };
 }
 

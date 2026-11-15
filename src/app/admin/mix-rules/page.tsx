@@ -15,6 +15,7 @@ interface Setting {
   maxTeas: number;
   price: number;
   isEnabled: boolean;
+  packGrams: number;
 }
 interface Tea {
   id: string;
@@ -41,7 +42,7 @@ async function post(body: object) {
 
 export default function MixRulesAdmin() {
   const [rules, setRules] = useState<Rule[]>([]);
-  const [setting, setSetting] = useState<Setting>({ minTeas: 2, maxTeas: 3, price: 1600, isEnabled: true });
+  const [setting, setSetting] = useState<Setting>({ minTeas: 2, maxTeas: 3, price: 1600, isEnabled: true, packGrams: 28 });
   const [teas, setTeas] = useState<Tea[]>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
@@ -59,7 +60,7 @@ export default function MixRulesAdmin() {
       .then((d) => {
         if (!d) return;
         setRules(d.rules);
-        setSetting(d.setting);
+        setSetting({ packGrams: 28, ...d.setting });
         setTeas(d.teas);
       })
       .finally(() => setLoading(false));
@@ -120,9 +121,13 @@ export default function MixRulesAdmin() {
             Price ($)
             <input type="number" min={1} step="0.01" className={field} value={(setting.price / 100).toFixed(2)} onChange={(e) => setSetting({ ...setting, price: Math.round(Number(e.target.value) * 100) })} />
           </label>
+          <label className="text-xs text-stone-500 flex flex-col gap-1">
+            Pouch (grams)
+            <input type="number" min={5} max={500} className={field} value={setting.packGrams} onChange={(e) => setSetting({ ...setting, packGrams: Number(e.target.value) })} />
+          </label>
           <label className="text-xs text-stone-500 flex items-center gap-2 pb-2">
             <input type="checkbox" checked={setting.isEnabled} onChange={(e) => setSetting({ ...setting, isEnabled: e.target.checked })} />
-            Builder open
+            Generator open
           </label>
           <button type="submit" className="bg-[#3d4a3a] text-white px-5 py-2.5 rounded-full text-xs tracking-widest uppercase hover:bg-[#2b3a28]">
             Save

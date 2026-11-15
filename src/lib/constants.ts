@@ -9,7 +9,9 @@ export const DISCLAIMERS = [
 ];
 
 export const EFFECT_TYPES = ["Calming", "Energizing", "Balancing", "Neutral"] as const;
-export const CAFFEINE_OPTIONS = ["Yes", "No", "May Contain", "Unknown"] as const;
-export const BATCH_SIZE = 10;
-export const MAX_BATCHES = 3;
+export const CAFFEINE_OPTIONS = ["No", "Low", "Medium", "High", "Yes", "May Contain", "Unknown"] as const;
+/** Default number of pouches poured per batch. Each batch can override it in the admin. */
+export const BATCH_SIZE = 12;
+/** Default pouch weight in grams (1 oz). */
+export const PACK_GRAMS = 28;
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mystherie.com";

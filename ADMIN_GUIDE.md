@@ -63,7 +63,20 @@ This guide explains how to use the admin panel to manage your tea drops, view or
 
 ---
 
+## Batch size, descriptions and recipes
+
+- **Pouches in this batch**: how many pouches you pour. New batches start at 12.
+- **Mood, Flavor direction, Best time, Caffeine, Description**: shown to customers. Describe the feeling and taste, never the teas.
+- **Recipe (private)**: the teas and parts in the batch. Customers never see it. Every order saves a copy with grams per pouch.
+- **Pouch grams**: 28 g (1 oz) by default.
+
+## Make a Mix (mix generator)
+
+Customers choose a mood, flavor, caffeine and time of day, and the site generates 2 to 3 teas from what's in stock, following the mix rules. They can generate another, swap a tea, add or remove one, or change the lead tea. The lead tea is 2 parts and the others 1 part each. Price, tea count and pouch size are under **Mix rules**.
+
 ## Viewing Orders
+
+Every order shows exactly what to blend: each tea with its inventory number, parts and grams per pouch. For more than one pouch it also shows the totals. The same recipe is saved on the Stripe payment as `blend` metadata.
 
 1. Go to **Admin** → **Orders**
 2. You'll see a list of all orders with:

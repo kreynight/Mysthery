@@ -1,16 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
-import { getMixRules, getMixSetting, getPublicTeas } from "@/lib/teas";
+import { getMixRules, getMixSetting, getPublicTeas, snapshotRecipe } from "@/lib/teas";
 import { validateMix } from "@/lib/mix";
+import { parseRecipeItems, recipeText } from "@/lib/recipe";
+
+/** Accepts ["id", ...] (older pages) or [{ id, parts }, ...]. Parts are 1 to 3. */
+function parseMix(mix: unknown): { id: string; parts: number }[] | null {
+  if (!Array.isArray(mix) || mix.length === 0 || mix.length > 10) return null;
+  const out: { id: string; parts: number }[] = [];
+  for (const x of mix) {
+    if (typeof x === "string") out.push({ id: x, parts: 1 });
+    else if (x && typeof x === "object" && typeof (x as { id: unknown }).id === "string") {
+      const parts = Math.round(Number((x as { parts?: unknown }).parts) || 1);
+      out.push({ id: (x as { id: string }).id, parts: Math.min(3, Math.max(1, parts)) });
+    } else return null;
+  }
+  return out;
+}
 
 async function mixCheckout(req: NextRequest, mix: unknown) {
-  if (!Array.isArray(mix) || mix.length === 0 || mix.length > 10 || !mix.every((x) => typeof x === "string")) {
-    return NextResponse.json({ error: "Invalid mix." }, { status: 400 });
-  }
+  const wanted = parseMix(mix);
+  if (!wanted) return NextResponse.json({ error: "Invalid mix." }, { status: 400 });
   const [teas, rules, setting] = await Promise.all([getPublicTeas(), getMixRules(), getMixSetting()]);
   const byId = new Map(teas.map((t) => [t.id, t]));
-  const picked = (mix as string[]).map((id) => byId.get(id));
+  const picked = wanted.map((w) => byId.get(w.id));
   if (picked.some((t) => !t)) {
     return NextResponse.json({ error: "One of those teas just went out of stock." }, { status: 400 });
   }
@@ -18,7 +32,14 @@ async function mixCheckout(req: NextRequest, mix: unknown) {
   const problem = validateMix(chosen, rules, setting);
   if (problem) return NextResponse.json({ error: problem }, { status: 400 });
 
-  const names = chosen.map((t) => t.name).join(" + ");
+  const recipe = await snapshotRecipe(
+    chosen.map((t, i) => ({ ingredientId: t.id, name: t.name, parts: wanted[i].parts })),
+    setting.packGrams,
+    1
+  );
+  const names = chosen
+    .map((t, i) => (wanted[i].parts > 1 ? `${t.name} (${wanted[i].parts} parts)` : t.name))
+    .join(" + ");
   const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "";
 
   const session = await getStripe().checkout.sessions.create({
@@ -39,6 +60,7 @@ async function mixCheckout(req: NextRequest, mix: unknown) {
     metadata: {
       kind: "mix",
       teaIds: chosen.map((t) => t.id).join(",").slice(0, 500),
+      blend: recipe ? recipeText(recipe) : "",
     },
     shipping_address_collection: { allowed_countries: ["US"] },
     success_url: `${origin}/success`,
@@ -49,6 +71,7 @@ async function mixCheckout(req: NextRequest, mix: unknown) {
     data: {
       dropId: null,
       mixItems: names,
+      recipe: recipe ? (recipe as object) : undefined,
       quantity: 1,
       stripeSessionId: session.id,
       totalAmount: setting.price,
@@ -84,6 +107,7 @@ export async function POST(req: NextRequest) {
     }
 
     const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "";
+    const recipe = await snapshotRecipe(parseRecipeItems(drop.recipe), drop.packGrams || 28, quantity);
 
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",
@@ -104,6 +128,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         dropId: drop.id,
         quantity: String(quantity),
+        blend: recipe ? recipeText(recipe) : "",
       },
       shipping_address_collection: { allowed_countries: ["US"] },
       success_url: `${origin}/success`,
@@ -115,6 +140,7 @@ export async function POST(req: NextRequest) {
       data: {
         dropId: drop.id,
         quantity,
+        recipe: recipe ? (recipe as object) : undefined,
         stripeSessionId: session.id,
         totalAmount: drop.price * quantity,
         status: "pending",

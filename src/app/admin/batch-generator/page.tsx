@@ -90,7 +90,8 @@ export default function BatchGeneratorPage() {
           steepGuide: data.steepGuide,
           allergenNote:
             "Contains botanicals. Cross-contact with herbs, spices, and citrus is possible.",
-          dropNotes: `Generated batch: ${data.ingredients.map((i) => i.name).join(", ")}`,
+          recipe: data.ingredients.map((i, n) => ({ ingredientId: i.id, name: i.name, parts: n === 0 ? 2 : 1 })),
+          mood: data.effectType,
           batchQuantityTotal: BATCH_SIZE,
           isActive: false,
         }),

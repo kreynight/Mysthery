@@ -17,24 +17,13 @@ export const metadata: Metadata = {
 function TeaCard({ tea }: { tea: PublicTea }) {
   const tint = FAMILY_TINT[tea.family] || "#55634a";
   return (
-    <li className="rounded-2xl bg-[#f5f7ef] ring-1 ring-stone-200 p-5 flex flex-col gap-2">
-      <div className="flex items-start gap-3">
-        <span
-          className="mt-1 h-3 w-3 shrink-0 rounded-full"
-          style={{ backgroundColor: tint }}
-          aria-hidden="true"
-        />
-        <div className="min-w-0">
-          <h3 className="font-display text-lg leading-snug text-[#2b3a28]">{tea.name}</h3>
-          {tea.category && <p className="text-xs uppercase tracking-wide text-stone-500">{tea.category}</p>}
-        </div>
-      </div>
-      {tea.flavorNotes && <p className="text-sm text-stone-600 leading-relaxed">{tea.flavorNotes}</p>}
-      <div className="mt-auto pt-2 flex flex-wrap gap-2 text-xs">
-        <span className="rounded-full bg-[#e1e9d6] text-[#2b3a28] px-3 py-1">{tea.caffeine}</span>
-        {tea.culturalRoots && (
-          <span className="rounded-full bg-[#efe6da] text-[#4a3828] px-3 py-1">{tea.culturalRoots}</span>
-        )}
+    <li className="rounded-2xl bg-[#f5f7ef] ring-1 ring-stone-200 px-5 py-4 flex items-start gap-3">
+      <span className="mt-1.5 h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: tint }} aria-hidden="true" />
+      <div className="min-w-0">
+        <h3 className="font-display text-lg leading-snug text-[#2b3a28]">{tea.name}</h3>
+        <p className="text-xs text-stone-500 mt-0.5">
+          {[tea.category, tea.note].filter(Boolean).join(" · ") || FAMILIES[tea.family]?.label}
+        </p>
       </div>
     </li>
   );
@@ -65,7 +54,7 @@ export default async function TeaLibraryPage() {
           <p className="text-[11px] tracking-[0.3em] uppercase text-[#d9c3a5] mb-2">{teas.length} on the shelf</p>
           <h1 className="font-display text-4xl md:text-5xl font-light text-[#f5f7ef] mb-3">The tea library</h1>
           <p className="text-sm text-[#e3eadb] leading-relaxed">
-            Everything our mystery batches are blended from. Browse it, then pick two or three to make your own.
+            The teas on our shelf right now, by type. Browse them, then let the mix generator pour you something new.
           </p>
         </div>
       </section>

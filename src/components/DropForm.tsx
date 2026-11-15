@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { EFFECT_TYPES, CAFFEINE_OPTIONS, BATCH_SIZE, MAX_BATCHES } from "@/lib/constants";
+import { EFFECT_TYPES, CAFFEINE_OPTIONS, BATCH_SIZE, PACK_GRAMS } from "@/lib/constants";
+import { blockingRule, toPublicTea, type RuleLike } from "@/lib/mix";
+import { buildOrderRecipe, packLabel, type RecipeItem } from "@/lib/recipe";
 
 interface DropFormData {
   name: string;
@@ -21,6 +23,133 @@ interface DropFormData {
   batchQuantityRemaining: string;
   dropStartDate: string;
   isActive: boolean;
+  mood: string;
+  flavorDirection: string;
+  bestTime: string;
+  description: string;
+  packGrams: string;
+  recipe: RecipeItem[];
+}
+
+interface InventoryRow {
+  id: string;
+  inventoryNo: number | null;
+  name: string;
+  brand: string | null;
+  category: string | null;
+  caffeineLevel: string | null;
+  flavorNotes: string | null;
+  wellnessFunction: string | null;
+  mixFamily: string | null;
+  inStock: boolean;
+}
+
+function RecipeEditor({
+  value,
+  packGrams,
+  onChange,
+}: {
+  value: RecipeItem[];
+  packGrams: number;
+  onChange: (v: RecipeItem[]) => void;
+}) {
+  const [inventory, setInventory] = useState<InventoryRow[]>([]);
+  const [rules, setRules] = useState<RuleLike[]>([]);
+
+  useEffect(() => {
+    fetch("/api/admin/inventory")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setInventory(Array.isArray(d) ? d : []))
+      .catch(() => setInventory([]));
+    fetch("/api/admin/mix-rules")
+      .then((r) => (r.ok ? r.json() : { rules: [] }))
+      .then((d) => setRules(d.rules || []))
+      .catch(() => setRules([]));
+  }, []);
+
+  const byId = useMemo(() => new Map(inventory.map((i) => [i.id, i])), [inventory]);
+  const recipe = buildOrderRecipe(
+    value.map((v) => ({ inventoryNo: byId.get(v.ingredientId)?.inventoryNo ?? null, name: v.name, brand: null, parts: v.parts })),
+    packGrams,
+    1
+  );
+
+  const warnings: string[] = [];
+  const pub = value.map((v) => byId.get(v.ingredientId)).filter(Boolean).map((r) => toPublicTea(r as InventoryRow));
+  for (let i = 0; i < pub.length; i++) {
+    for (let j = i + 1; j < pub.length; j++) {
+      const r = blockingRule(pub[i], pub[j], rules);
+      if (r) warnings.push(`${pub[i].name} and ${pub[j].name} break a mix rule${r.reason ? `: ${r.reason}` : "."}`);
+    }
+  }
+  for (const v of value) {
+    const row = byId.get(v.ingredientId);
+    if (row && !row.inStock) warnings.push(`${row.name} is marked out of stock.`);
+  }
+
+  const choices = inventory.filter((i) => i.inStock || value.some((v) => v.ingredientId === i.id));
+  const update = (idx: number, patch: Partial<RecipeItem>) =>
+    onChange(value.map((v, i) => (i === idx ? { ...v, ...patch } : v)));
+
+  return (
+    <div className="border border-stone-300 p-4 space-y-3 bg-stone-50">
+      <p className="text-xs text-stone-500">
+        Only you see this. Every order of this batch saves this recipe, so the Orders page tells you exactly what to
+        blend.
+      </p>
+      {value.map((item, idx) => (
+        <div key={idx} className="flex flex-wrap items-center gap-2">
+          <select
+            value={item.ingredientId}
+            onChange={(e) => {
+              const row = byId.get(e.target.value);
+              if (row) update(idx, { ingredientId: row.id, name: row.name });
+            }}
+            className="flex-1 min-w-[12rem] border border-stone-300 px-3 py-2 text-sm bg-white"
+          >
+            {!byId.has(item.ingredientId) && <option value={item.ingredientId}>{item.name}</option>}
+            {choices.map((c) => (
+              <option key={c.id} value={c.id}>
+                #{c.inventoryNo} {c.name}
+                {c.inStock ? "" : " (out of stock)"}
+              </option>
+            ))}
+          </select>
+          <label className="flex items-center gap-1 text-xs text-stone-500">
+            <input
+              type="number"
+              min={1}
+              max={10}
+              value={item.parts}
+              onChange={(e) => update(idx, { parts: Math.max(1, Math.min(10, Number(e.target.value) || 1)) })}
+              className="w-16 border border-stone-300 px-2 py-2 text-sm bg-white"
+            />
+            parts
+          </label>
+          <span className="text-xs text-stone-600 w-14">{recipe.lines[idx]?.grams} g</span>
+          <button type="button" onClick={() => onChange(value.filter((_, i) => i !== idx))} className="text-xs text-red-500 hover:text-red-700">
+            Remove
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        disabled={choices.length === 0}
+        onClick={() => {
+          const first = choices.find((c) => !value.some((v) => v.ingredientId === c.id));
+          if (first) onChange([...value, { ingredientId: first.id, name: first.name, parts: 1 }]);
+        }}
+        className="text-xs tracking-wide uppercase text-[#3d4a3a] underline underline-offset-2"
+      >
+        Add a tea
+      </button>
+      {warnings.map((w) => (
+        <p key={w} className="text-xs text-orange-700">
+          {w}
+        </p>
+      ))}
+    </div>
+  );
 }
 
 interface DropFormProps {
@@ -45,6 +174,12 @@ const defaultData: DropFormData = {
   batchQuantityRemaining: String(BATCH_SIZE),
   dropStartDate: "",
   isActive: true,
+  mood: "",
+  flavorDirection: "",
+  bestTime: "",
+  description: "",
+  packGrams: String(PACK_GRAMS),
+  recipe: [],
 };
 
 export default function DropForm({ initial, dropId }: DropFormProps) {
@@ -56,7 +191,7 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
 
   const isEdit = !!dropId;
 
-  const set = (field: keyof DropFormData, value: string | boolean | string[]) => {
+  const set = (field: keyof DropFormData, value: string | boolean | string[] | RecipeItem[]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -82,10 +217,7 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
     );
   };
 
-  const currentBatches = Math.ceil(Number(form.batchQuantityTotal) / BATCH_SIZE) || 1;
-
-  const handleBatchChange = (batches: number) => {
-    const total = String(batches * BATCH_SIZE);
+  const handleSizeChange = (total: string) => {
     set("batchQuantityTotal", total);
     if (!isEdit) set("batchQuantityRemaining", total);
   };
@@ -180,24 +312,18 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
         </div>
         <div>
           <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
-            Batches ({BATCH_SIZE} per batch) *
+            Pouches in this batch *
           </label>
-          <div className="flex gap-2">
-            {Array.from({ length: MAX_BATCHES }, (_, i) => i + 1).map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => handleBatchChange(n)}
-                className={`flex-1 py-2.5 text-sm border transition-colors ${
-                  currentBatches === n
-                    ? "bg-[#3d4a3a] text-white border-[#3d4a3a]"
-                    : "border-stone-300 hover:border-stone-500"
-                }`}
-              >
-                {n} ({n * BATCH_SIZE})
-              </button>
-            ))}
-          </div>
+          <input
+            type="number"
+            min="1"
+            max="500"
+            required
+            value={form.batchQuantityTotal}
+            onChange={(e) => handleSizeChange(e.target.value)}
+            className="w-full border border-stone-300 px-3 py-2.5 text-sm"
+            placeholder={String(BATCH_SIZE)}
+          />
         </div>
         {isEdit && (
           <div>
@@ -228,6 +354,75 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
           className="w-full border border-stone-300 px-3 py-2.5 text-sm"
           placeholder="A quiet evening in a warm cup."
         />
+      </div>
+
+      {/* Descriptive, still mysterious */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">Mood</label>
+          <input
+            type="text"
+            value={form.mood}
+            onChange={(e) => set("mood", e.target.value)}
+            className="w-full border border-stone-300 px-3 py-2.5 text-sm"
+            placeholder="Unwinding"
+          />
+        </div>
+        <div>
+          <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">Best time</label>
+          <input
+            type="text"
+            value={form.bestTime}
+            onChange={(e) => set("bestTime", e.target.value)}
+            className="w-full border border-stone-300 px-3 py-2.5 text-sm"
+            placeholder="Evening, before bed"
+          />
+        </div>
+      </div>
+      <div>
+        <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">Flavor direction</label>
+        <input
+          type="text"
+          value={form.flavorDirection}
+          onChange={(e) => set("flavorDirection", e.target.value)}
+          className="w-full border border-stone-300 px-3 py-2.5 text-sm"
+          placeholder="Floral and honeyed, soft finish"
+        />
+      </div>
+      <div>
+        <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
+          Description (2 or 3 sentences, never name the teas)
+        </label>
+        <textarea
+          rows={3}
+          value={form.description}
+          onChange={(e) => set("description", e.target.value)}
+          className="w-full border border-stone-300 px-3 py-2.5 text-sm"
+        />
+      </div>
+
+      {/* Recipe (admin only) */}
+      <div>
+        <div className="flex items-end justify-between gap-4 mb-1">
+          <label className="block text-xs tracking-wide uppercase text-stone-500">Recipe (private)</label>
+          <label className="flex items-center gap-2 text-xs text-stone-500">
+            Pouch grams
+            <input
+              type="number"
+              min={5}
+              max={500}
+              value={form.packGrams}
+              onChange={(e) => set("packGrams", e.target.value)}
+              className="w-20 border border-stone-300 px-2 py-1.5 text-sm"
+            />
+          </label>
+        </div>
+        <RecipeEditor
+          value={form.recipe}
+          packGrams={Number(form.packGrams) || PACK_GRAMS}
+          onChange={(v) => set("recipe", v)}
+        />
+        <p className="text-xs text-stone-400 mt-1">{packLabel(Number(form.packGrams) || PACK_GRAMS)}</p>
       </div>
 
       {/* Images */}
@@ -369,7 +564,7 @@ export default function DropForm({ initial, dropId }: DropFormProps) {
       {/* Collection Notes */}
       <div>
         <label className="block text-xs tracking-wide uppercase text-stone-500 mb-1">
-          Collection Notes
+          Batch number (shown publicly)
         </label>
         <input
           type="text"

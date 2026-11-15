@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthenticated } from "@/lib/auth";
+import { dropFields } from "@/lib/dropFields";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -46,6 +47,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
         batchQuantityRemaining: parseInt(data.batchQuantityRemaining, 10),
         dropStartDate: data.dropStartDate ? new Date(data.dropStartDate) : null,
         isActive: data.isActive ?? true,
+        ...dropFields(data),
       },
     });
 

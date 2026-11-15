@@ -10,6 +10,9 @@ interface ProductCardProps {
   vibeLine?: string | null;
   image?: string;
   batchNo?: string | null;
+  mood?: string | null;
+  caffeine?: string | null;
+  bestTime?: string | null;
 }
 
 export default function ProductCard({
@@ -20,7 +23,11 @@ export default function ProductCard({
   vibeLine,
   image,
   batchNo,
+  mood,
+  caffeine,
+  bestTime,
 }: ProductCardProps) {
+  const chips = [mood, caffeine, bestTime].filter(Boolean) as string[];
   const soldOut = remaining <= 0;
 
   return (
@@ -65,6 +72,15 @@ export default function ProductCard({
         <div className="min-w-0">
           <h3 className="font-display text-xl text-[#2b3a28] mb-0.5">{name}</h3>
           {vibeLine && <p className="text-sm text-stone-500 italic">{vibeLine}</p>}
+          {chips.length > 0 && (
+            <p className="mt-2 flex flex-wrap gap-1.5">
+              {chips.map((c) => (
+                <span key={c} className="rounded-full bg-[#e1e9d6] text-[#2b3a28] text-[11px] px-2.5 py-1">
+                  {c}
+                </span>
+              ))}
+            </p>
+          )}
         </div>
         <p className="text-base font-medium text-[#5b4532] whitespace-nowrap">{formatPrice(price)}</p>
       </div>
