@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import Stripe from "stripe";
-import { getStockMap, orderFitsStock, takeFromStock } from "@/lib/teas";
+import { getStockMap, orderFitsStock, returnToStock, takeFromStock } from "@/lib/teas";
 import { parseOrderRecipe } from "@/lib/recipe";
 
 export async function POST(req: NextRequest) {
@@ -31,6 +31,8 @@ export async function POST(req: NextRequest) {
     const paidFields = {
       email: session.customer_details?.email || null,
       stripePaymentId: (session.payment_intent as string) || null,
+      // What was actually charged, after any promo code.
+      ...(typeof session.amount_total === "number" ? { totalAmount: session.amount_total } : {}),
     };
 
     try {
@@ -79,5 +81,56 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  if (event.type === "charge.refunded") {
+    const charge = event.data.object as Stripe.Charge;
+    // Only a full refund puts tea back; a partial refund is left as is.
+    if (charge.amount_refunded < charge.amount) return NextResponse.json({ received: true });
+    try {
+      await handleRefund(charge);
+    } catch (err) {
+      console.error("Error processing refund:", err);
+      return NextResponse.json({ error: "Processing error." }, { status: 500 });
+    }
+  }
+
   return NextResponse.json({ received: true });
 }
+
+const ORDER_FIELDS = { id: true, status: true, recipe: true, dropId: true, quantity: true } as const;
+
+async function handleRefund(charge: Stripe.Charge) {
+  const paymentId = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
+  if (!paymentId) return;
+
+  let order = await prisma.order.findFirst({ where: { stripePaymentId: paymentId }, select: ORDER_FIELDS });
+  if (!order) {
+    // An order the site never saw as paid has no payment id yet; find it through its checkout session.
+    const sessions = await getStripe().checkout.sessions.list({ payment_intent: paymentId, limit: 1 });
+    const sessionId = sessions.data[0]?.id;
+    if (sessionId) order = await prisma.order.findUnique({ where: { stripeSessionId: sessionId }, select: ORDER_FIELDS });
+  }
+  if (!order) {
+    console.error(`No order for refunded payment ${paymentId}`);
+    return;
+  }
+  if (order.status === "refunded") return;
+
+  // Claim the order first so a resent event can't put the stock back twice.
+  const claimed = await prisma.order.updateMany({
+    where: { id: order.id, status: order.status },
+    data: { status: "refunded", stripePaymentId: paymentId },
+  });
+  if (claimed.count === 0) return;
+
+  // Only a paid order took stock off, so only a paid order puts it back.
+  if (order.status !== "paid") return;
+  if (order.dropId) {
+    await prisma.drop.update({
+      where: { id: order.dropId },
+      data: { batchQuantityRemaining: { increment: order.quantity } },
+    });
+  }
+  const recipe = parseOrderRecipe(order.recipe);
+  if (recipe) await returnToStock(recipe);
+}
+

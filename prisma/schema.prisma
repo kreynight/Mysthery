@@ -49,7 +49,7 @@ model Order {
   email           String?
   stripeSessionId String   @unique
   stripePaymentId String?
-  status          String   @default("pending") // pending, paid, failed, review
+  status          String   @default("pending") // pending, paid, failed, review, refunded
   totalAmount     Int      // cents
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

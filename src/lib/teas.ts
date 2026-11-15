@@ -157,3 +157,16 @@ export async function takeFromStock(recipe: OrderRecipe): Promise<void> {
     });
   }
 }
+
+/** A refunded order's tea goes back on the shelf (counted teas only). */
+export async function returnToStock(recipe: OrderRecipe): Promise<void> {
+  for (const l of recipe.lines) {
+    if (!l.ingredientId) continue;
+    const grams = Math.ceil(l.grams * recipe.pouches);
+    if (grams <= 0) continue;
+    await prisma.inventoryIngredient.updateMany({
+      where: { id: l.ingredientId, gramsOnHand: { not: null } },
+      data: { gramsOnHand: { increment: grams } },
+    });
+  }
+}

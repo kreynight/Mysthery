@@ -90,6 +90,7 @@ export default function AdminOrdersPage() {
     pending: "text-amber-700 bg-amber-50",
     failed: "text-red-700 bg-red-50",
     review: "text-orange-700 bg-orange-50",
+    refunded: "text-stone-600 bg-stone-100",
   };
 
   if (loading) {
