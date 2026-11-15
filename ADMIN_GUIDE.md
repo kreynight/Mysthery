@@ -70,9 +70,16 @@ This guide explains how to use the admin panel to manage your tea drops, view or
 - **Recipe (private)**: the teas and parts in the batch. Customers never see it. Every order saves a copy with grams per pouch.
 - **Pouch grams**: 28 g (1 oz) by default.
 
+## Sizes, prices and shipping
+
+- Customers buy 1, 3 or 5 pouches. Set all three prices on each batch (blank 3 and 5 prices fall back to a small bundle discount).
+- Current prices: batches $18 / $48 / $72, generated mixes $22 / $60 / $90 (set under **Mix rules**).
+- Shipping is added at Stripe checkout: $6 on a single pouch, free on 3 or more. Change it in `src/lib/pricing.ts`.
+- A 3 or 5 pouch order takes 3 or 5 pouches off the batch count. The order's blend card shows grams for every pouch.
+
 ## Make a Mix (mix generator)
 
-Customers choose a mood, flavor, caffeine and time of day, and the site generates 2 to 3 teas from what's in stock, following the mix rules. They can generate another, swap a tea, add or remove one, or change the lead tea. The lead tea is 2 parts and the others 1 part each. Price, tea count and pouch size are under **Mix rules**.
+Customers tap optional picks (taste, feel, caffeine), pull the lever, and the site generates 2 to 3 teas from what's in stock, following the mix rules. The price for 1, 3 or 5 pouches shows the moment the blend lands. They can pull again as often as they like. The lead tea is 2 parts and the others 1 part each. Prices, tea count and pouch size are under **Mix rules**.
 
 ## Viewing Orders
 
