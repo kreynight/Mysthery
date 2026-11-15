@@ -101,7 +101,8 @@ export function teaOffer(t: { gramsOnHand: number | null; rare: boolean; premium
     // A full 10 g tasting pouch costs the tasting price; a smaller one costs its share, rounded to the dollar.
     const base = t.premium ? TASTING_PREMIUM_PRICE : TASTING_PRICE;
     const scaled = Math.max(TASTING_MIN_PRICE, Math.round((base * grams) / TASTING_GRAMS / 100) * 100);
-    const price = scaled + (t.rare ? VERY_RARE_TASTING_EXTRA : 0);
+    // A tea marked rare by hand never drops below the full tasting price, however few grams are left.
+    const price = t.rare ? base + VERY_RARE_TASTING_EXTRA : scaled;
     return { grams, price, premium: t.premium, rare, lowStock, tasting: true };
   }
   return {
