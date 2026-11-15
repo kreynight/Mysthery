@@ -19,15 +19,13 @@ function extractBatchNo(dropNotes: string | null): string | null {
 
 export default async function Home() {
   let drops: Awaited<ReturnType<typeof prisma.drop.findMany>> = [];
-  let teaCount = 0;
   let dbError = false;
   let rareIds = new Set<string>();
   let stock = new Map<string, number | null>();
 
   try {
-    [drops, teaCount, rareIds, stock] = await Promise.all([
+    [drops, rareIds, stock] = await Promise.all([
       prisma.drop.findMany({ where: { isActive: true }, orderBy: { createdAt: "asc" } }),
-      prisma.inventoryIngredient.count({ where: { inStock: true } }),
       getRareIds(),
       getStockMap(),
     ]);
@@ -165,7 +163,7 @@ export default async function Home() {
           <div className="absolute inset-0 bg-gradient-to-t from-[#1e2a1c]/90 via-[#1e2a1c]/30 to-transparent" />
           <div className="relative p-6 md:p-8">
             <p className="text-[11px] tracking-[0.3em] uppercase text-[#d3dec6] mb-2">
-              {teaCount > 0 ? `${teaCount} teas and botanicals` : "Teas and botanicals"}
+              Teas and botanicals
             </p>
             <h3 className="font-display text-3xl font-light text-[#f5f7ef] mb-2">The tea library</h3>
             <p className="text-sm text-[#e3eadb] max-w-sm">
