@@ -55,7 +55,7 @@ export default async function MixPage() {
             {rules.map((r, i) => (
               <li key={r.id || i}>
                 <span className="font-medium text-[#2b3a28]">
-                  {r.familyB === "*" ? `${keyLabel(r.familyA)}: always on its own` : `${keyLabel(r.familyA)} + ${keyLabel(r.familyB).toLowerCase()}`}
+                  {r.familyB === "*" ? `${keyLabel(r.familyA)}, never mixed` : `${keyLabel(r.familyA)} + ${keyLabel(r.familyB).toLowerCase()}`}
                 </span>
                 {r.reason ? <span>: {r.reason}</span> : null}
               </li>
