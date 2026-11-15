@@ -68,6 +68,10 @@ export const TASTING_PRICE = 1400;
 export const TASTING_PREMIUM_PRICE = 1800;
 /** Added per pouch when a batch or generated mix includes a rare tea. */
 export const RARE_BLEND_EXTRA = 400;
+/** Added to a tasting pouch of a tea marked rare by hand (very rare, like Bwa Dinn or Mabi). */
+export const VERY_RARE_TASTING_EXTRA = 600;
+/** No tasting pouch sells for less than this, however small. */
+export const TASTING_MIN_PRICE = 800;
 
 export interface TeaOffer {
   grams: number;
@@ -94,7 +98,11 @@ export function teaOffer(t: { gramsOnHand: number | null; rare: boolean; premium
   if (lowStock) {
     const grams = Math.min(TASTING_GRAMS, t.gramsOnHand ?? 0);
     if (grams < 4) return null;
-    return { grams, price: t.premium ? TASTING_PREMIUM_PRICE : TASTING_PRICE, premium: t.premium, rare, lowStock, tasting: true };
+    // A full 10 g tasting pouch costs the tasting price; a smaller one costs its share, rounded to the dollar.
+    const base = t.premium ? TASTING_PREMIUM_PRICE : TASTING_PRICE;
+    const scaled = Math.max(TASTING_MIN_PRICE, Math.round((base * grams) / TASTING_GRAMS / 100) * 100);
+    const price = scaled + (t.rare ? VERY_RARE_TASTING_EXTRA : 0);
+    return { grams, price, premium: t.premium, rare, lowStock, tasting: true };
   }
   return {
     grams: TEA_POUCH_GRAMS,
