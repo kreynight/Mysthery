@@ -59,8 +59,8 @@ export default async function Home() {
                 Pick a mood.<br />We pick the tea.
               </h1>
               <p className="text-sm md:text-base text-[#e3eadb] leading-relaxed mb-7 max-w-md">
-                Mystery blends poured in tiny, numbered batches of about a dozen pouches. Each one
-                is new, so you taste it before you know what&apos;s inside.
+                Mystery blends poured in tiny, numbered batches. Each one is new, so you taste it
+                before you know what&apos;s inside.
               </p>
               <div className="flex flex-wrap gap-3">
                 <a

@@ -89,9 +89,9 @@ export default function TeaLibrary({ teas }: { teas: PublicTea[] }) {
           </Picker>
           <Picker label="Country" value={country} onChange={setCountry} className={select}>
             <option value="all">All countries</option>
-            {countries.map(([c, n]) => (
+            {countries.map(([c]) => (
               <option key={c} value={c}>
-                {c} ({n})
+                {c}
               </option>
             ))}
           </Picker>
@@ -105,8 +105,6 @@ export default function TeaLibrary({ teas }: { teas: PublicTea[] }) {
         </div>
         {(filtered || !grouped) && (
           <p className="mt-2 text-[11px] text-stone-500">
-            {shown.length} {shown.length === 1 ? "tea" : "teas"}
-            {" · "}
             <button
               type="button"
               onClick={() => {
@@ -116,7 +114,7 @@ export default function TeaLibrary({ teas }: { teas: PublicTea[] }) {
               }}
               className="underline underline-offset-2 hover:text-[#2b3a28]"
             >
-              Clear
+              Clear filters
             </button>
           </p>
         )}
@@ -134,7 +132,7 @@ export default function TeaLibrary({ teas }: { teas: PublicTea[] }) {
                   href={`#${g.family}`}
                   className="rounded-full border border-stone-300 px-4 py-2 text-xs uppercase tracking-wide text-[#2b3a28] hover:bg-[#e1e9d6] transition-colors"
                 >
-                  {FAMILIES[g.family]?.label || "Other"} · {g.teas.length}
+                  {FAMILIES[g.family]?.label || "Other"}
                 </a>
               ))}
               <Link

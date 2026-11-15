@@ -31,7 +31,7 @@ export default async function TeaLibraryPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#1e2a1c]/90 via-[#1e2a1c]/50 to-transparent" />
         <LeafSprig className="absolute right-6 top-4 w-24 opacity-70" color="#d3dec6" />
         <div className="relative p-6 md:p-12 max-w-xl">
-          <p className="text-[11px] tracking-[0.3em] uppercase text-[#d9c3a5] mb-2">{teas.length} on the shelf</p>
+          <p className="text-[11px] tracking-[0.3em] uppercase text-[#d9c3a5] mb-2">On the shelf</p>
           <h1 className="font-display text-3xl md:text-5xl font-light text-[#f5f7ef] mb-2 md:mb-3">The tea library</h1>
           <p className="text-sm text-[#e3eadb] leading-relaxed">
             The teas on our shelf right now, by type. Buy a single pouch of any of them, or let the mix generator
