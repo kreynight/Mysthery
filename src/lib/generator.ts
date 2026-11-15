@@ -1,5 +1,6 @@
 // The "make a mix" generator. Picks a blend from in-stock teas that obeys the mix rules.
 // Safe to import from client components.
+import { gramsPerPouch, pouchesCovered } from "@/lib/recipe";
 
 import {
   FLAVORS,
@@ -91,6 +92,12 @@ function fits(tea: PublicTea, chosen: PublicTea[], rules: RuleLike[]): boolean {
   return chosen.every((c) => c.id !== tea.id && baseName(c.name) !== n && !blockingRule(tea, c, rules));
 }
 
+/** How many pouches of this blend the shelf can fill right now. */
+export function mixPouchesInStock(items: GeneratedItem[], packGrams: number): number {
+  const grams = gramsPerPouch(items.map((i) => ({ parts: i.parts })), packGrams);
+  return pouchesCovered(items.map((i, k) => ({ grams: grams[k].grams, stock: i.tea.stock })));
+}
+
 /** Gives the lead tea 2 parts and the others 1 part. */
 export function withParts(teas: PublicTea[]): GeneratedItem[] {
   return teas.map((tea, i) => ({ tea, parts: i === 0 && teas.length > 1 ? 2 : 1 }));
@@ -104,9 +111,15 @@ export function generateMix(
   input: GeneratorInput,
   random: () => number = Math.random
 ): GeneratedItem[] | null {
-  const pool = teas.filter((t) => allowedByCaffeine(t, input.caffeine === "full" ? "any" : input.caffeine));
-  const leadPool = input.caffeine === "full" ? pool.filter((t) => t.caffeineTier === "high" || t.caffeineTier === "medium") : pool;
   const size = Math.max(setting.minTeas, Math.min(setting.maxTeas, 3));
+  // Skip teas that can't cover even one pouch: a side tea needs at least 1 of 4 parts, the lead 2 of 4.
+  const has = (t: PublicTea, g: number) => t.stock == null || t.stock >= g;
+  const pool = teas
+    .filter((t) => allowedByCaffeine(t, input.caffeine === "full" ? "any" : input.caffeine))
+    .filter((t) => has(t, setting.packGrams / (size + 1)));
+  const leadPool = (
+    input.caffeine === "full" ? pool.filter((t) => t.caffeineTier === "high" || t.caffeineTier === "medium") : pool
+  ).filter((t) => has(t, (setting.packGrams * 2) / (size + 1)));
 
   for (let attempt = 0; attempt < 12; attempt++) {
     const lead = weightedPick(
@@ -124,7 +137,10 @@ export function generateMix(
       if (!next) break;
       chosen.push(next);
     }
-    if (chosen.length >= setting.minTeas && !validateMix(chosen, rules, setting)) return withParts(chosen);
+    if (chosen.length >= setting.minTeas && !validateMix(chosen, rules, setting)) {
+      const items = withParts(chosen);
+      if (mixPouchesInStock(items, setting.packGrams) >= 1) return items;
+    }
   }
   return null;
 }

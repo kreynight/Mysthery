@@ -95,3 +95,20 @@ export function batchCaffeine(value: string | null): string | null {
       return value;
   }
 }
+
+/** Most whole orders-worth of pouches the stock can fill. Teas with no gram count never limit it. */
+export const UNLIMITED = 999;
+export function pouchesCovered(lines: { grams: number; stock: number | null }[]): number {
+  let n = UNLIMITED;
+  for (const l of lines) {
+    if (l.stock == null || l.grams <= 0) continue;
+    n = Math.min(n, Math.floor(l.stock / l.grams + 1e-9));
+  }
+  return Math.max(0, n);
+}
+
+/** Grams per pouch for each tea in a recipe of parts. */
+export function gramsPerPouch(items: { ingredientId?: string; parts: number }[], packGrams: number) {
+  const total = items.reduce((s, i) => s + i.parts, 0) || 1;
+  return items.map((i) => ({ ingredientId: i.ingredientId, grams: roundHalf((packGrams * i.parts) / total) }));
+}

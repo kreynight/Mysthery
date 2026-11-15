@@ -1,5 +1,13 @@
 import { prisma } from "@/lib/prisma";
-import { buildOrderRecipe, parseRecipeItems, type OrderRecipe, type RecipeItem } from "@/lib/recipe";
+import {
+  buildOrderRecipe,
+  gramsPerPouch,
+  parseRecipeItems,
+  pouchesCovered,
+  UNLIMITED,
+  type OrderRecipe,
+  type RecipeItem,
+} from "@/lib/recipe";
 import { LOW_STOCK_GRAMS } from "@/lib/pricing";
 import { DEFAULT_RULES, toPublicTea, type MixSettingLike, type PublicTea, type RuleLike } from "@/lib/mix";
 
@@ -94,4 +102,57 @@ export async function getRareIds(): Promise<Set<string>> {
 /** True when a batch recipe uses a rare tea. */
 export function recipeHasRare(recipe: unknown, rareIds: Set<string>): boolean {
   return parseRecipeItems(recipe).some((i) => !!i.ingredientId && rareIds.has(i.ingredientId));
+}
+
+/** Grams on hand for every tea, by id. Null means not counted. */
+export async function getStockMap(): Promise<Map<string, number | null>> {
+  try {
+    const rows = await prisma.inventoryIngredient.findMany({ select: { id: true, gramsOnHand: true, inStock: true } });
+    return new Map(rows.map((r) => [r.id, r.inStock ? r.gramsOnHand : 0]));
+  } catch {
+    return new Map();
+  }
+}
+
+/** Pouches of a batch recipe the shelf can fill. */
+export function recipePouchesInStock(recipe: unknown, packGrams: number, stock: Map<string, number | null>): number {
+  const items = parseRecipeItems(recipe);
+  if (!items.length) return UNLIMITED;
+  return pouchesCovered(
+    gramsPerPouch(items, packGrams).map((g) => ({ grams: g.grams, stock: stock.has(g.ingredientId!) ? stock.get(g.ingredientId!)! : null }))
+  );
+}
+
+/** Pouches a batch can still sell: its count, capped by the tea on the shelf. */
+export function batchPouchesLeft(
+  drop: { batchQuantityRemaining: number; recipe: unknown; packGrams: number | null },
+  stock: Map<string, number | null>
+): number {
+  return Math.max(0, Math.min(drop.batchQuantityRemaining, recipePouchesInStock(drop.recipe, drop.packGrams || 28, stock)));
+}
+
+/** True when the shelf still holds every gram an order's recipe needs. */
+export function orderFitsStock(recipe: OrderRecipe, stock: Map<string, number | null>): boolean {
+  return (
+    pouchesCovered(
+      recipe.lines.map((l) => ({ grams: l.grams, stock: l.ingredientId && stock.has(l.ingredientId) ? stock.get(l.ingredientId)! : null }))
+    ) >= recipe.pouches
+  );
+}
+
+/** Takes an order's tea off the shelf. Uncounted teas are left alone, and nothing goes below zero. */
+export async function takeFromStock(recipe: OrderRecipe): Promise<void> {
+  for (const l of recipe.lines) {
+    if (!l.ingredientId) continue;
+    const grams = Math.ceil(l.grams * recipe.pouches);
+    if (grams <= 0) continue;
+    await prisma.inventoryIngredient.updateMany({
+      where: { id: l.ingredientId, gramsOnHand: { not: null } },
+      data: { gramsOnHand: { decrement: grams } },
+    });
+    await prisma.inventoryIngredient.updateMany({
+      where: { id: l.ingredientId, gramsOnHand: { lt: 0 } },
+      data: { gramsOnHand: 0 },
+    });
+  }
 }

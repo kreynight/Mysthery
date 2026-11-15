@@ -6,7 +6,7 @@ import { FlowerSprig } from "@/components/Botanicals";
 import Link from "next/link";
 import { formatPrice, formatRemaining } from "@/lib/format";
 import { parseSize, priceTiers, withRare, RARE_BLEND_EXTRA } from "@/lib/pricing";
-import { getRareIds, recipeHasRare } from "@/lib/teas";
+import { batchPouchesLeft, getRareIds, getStockMap, recipeHasRare } from "@/lib/teas";
 import { batchCaffeine, packLabel } from "@/lib/recipe";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +37,8 @@ export default async function CollectionPage({ params, searchParams }: PageProps
 
   const batchNo = extractBatchNo(drop.dropNotes);
   const hasRare = recipeHasRare(drop.recipe, await getRareIds());
+  // The batch count, capped by the tea actually on the shelf.
+  const left = batchPouchesLeft(drop, await getStockMap());
   const tiers = withRare(priceTiers(drop.price, drop.price3, drop.price5), hasRare);
   
   // Descriptive but never names the teas: the recipe stays in the admin.
@@ -103,23 +105,21 @@ export default async function CollectionPage({ params, searchParams }: PageProps
 
           <p
             className={`text-sm tracking-wide uppercase mb-6 ${
-              drop.batchQuantityRemaining <= 0
+              left <= 0
                 ? "text-stone-400"
-                : drop.batchQuantityRemaining <= 5
+                : left <= 5
                 ? "text-[#8b6e4e] font-medium"
                 : "text-[#3d4a3a]"
             }`}
           >
-            {drop.batchQuantityRemaining > 0
-              ? `${drop.batchQuantityRemaining} of ${drop.batchQuantityTotal} pouches left`
-              : formatRemaining(drop.batchQuantityRemaining)}
+            {left > 0 ? `${left} of ${drop.batchQuantityTotal} pouches left` : formatRemaining(left)}
           </p>
 
           <BuyButton
             dropId={drop.id}
             tiers={tiers}
-            remaining={drop.batchQuantityRemaining}
-            initialSize={initialSize <= drop.batchQuantityRemaining ? initialSize : 1}
+            remaining={left}
+            initialSize={initialSize <= left ? initialSize : 1}
           />
 
           {/* Detail items */}

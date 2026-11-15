@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
-import { getMixRules, getMixSetting, getPublicTeas, getRareIds, recipeHasRare, snapshotRecipe } from "@/lib/teas";
+import {
+  batchPouchesLeft,
+  getMixRules,
+  getMixSetting,
+  getPublicTeas,
+  getRareIds,
+  getStockMap,
+  orderFitsStock,
+  recipeHasRare,
+  snapshotRecipe,
+} from "@/lib/teas";
 import { validateMix } from "@/lib/mix";
 import { parseRecipeItems, recipeText } from "@/lib/recipe";
 import { parseSize, priceTiers, shippingFor, shippingOption, sizeLabel, withRare, type PackSize } from "@/lib/pricing";
@@ -38,6 +48,12 @@ async function mixCheckout(req: NextRequest, mix: unknown, size: PackSize) {
     setting.packGrams,
     size
   );
+  if (!recipe || !orderFitsStock(recipe, await getStockMap())) {
+    return NextResponse.json(
+      { error: size > 1 ? "There isn't enough of these teas for that many pouches. Try fewer." : "One of those teas just ran low. Pull again." },
+      { status: 400 }
+    );
+  }
   const amount = withRare(priceTiers(setting.price, setting.price3, setting.price5), chosen.some((t) => t.rare))[size];
   const names = chosen
     .map((t, i) => (wanted[i].parts > 1 ? `${t.name} (${wanted[i].parts} parts)` : t.name))
@@ -161,9 +177,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Drop not found." }, { status: 404 });
     }
 
-    if (drop.batchQuantityRemaining < quantity) {
+    const left = batchPouchesLeft(drop, await getStockMap());
+    if (left < quantity) {
       return NextResponse.json(
-        { error: `Only ${drop.batchQuantityRemaining} pouches left in this batch.` },
+        { error: left > 0 ? `Only ${left} ${left === 1 ? "pouch" : "pouches"} left in this batch.` : "This batch just sold out." },
         { status: 400 }
       );
     }

@@ -84,6 +84,7 @@ This guide explains how to use the admin panel to manage your tea drops, view or
 - Tick **Rare** on any tea to add the rare premium. A rare 1 oz pouch costs $8 more.
 - Batches and generated mixes that include a rare or low stock tea cost $4 more per pouch, and show "Rare tea inside".
 - Single-pouch orders show as "Single pouch: tea name" under **Orders**.
+- Nothing sells more tea than you have. A batch shows the smaller of its pouch count and what its teas' grams can fill. The mix generator only picks blends the shelf can fill and greys out sizes it can't. Every paid order takes its grams off **Grams on hand**; if the stock ran out between checkout and payment, the order is marked **Review**. Teas with a blank gram count are never limited.
 
 ## Make a Mix (mix generator)
 

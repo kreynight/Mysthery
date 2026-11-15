@@ -84,6 +84,8 @@ export interface PublicTea {
   rare: boolean;
   /** What a single pouch of this tea sells for, or null when too little is left. */
   offer: TeaOffer | null;
+  /** Grams on hand, or null when not counted. Mixes never use more than this. */
+  stock: number | null;
 }
 
 interface RawIngredient {
@@ -221,6 +223,7 @@ export function toPublicTea(ing: RawIngredient & { id: string; inventoryNo: numb
     moods: tagsFor(MOODS, moodText, family),
     harsh,
     rare: !!ing.rare || isLowStock(ing.gramsOnHand),
+    stock: ing.gramsOnHand ?? null,
     offer: teaOffer({
       gramsOnHand: ing.gramsOnHand ?? null,
       rare: !!ing.rare,

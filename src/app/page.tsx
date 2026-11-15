@@ -6,7 +6,7 @@ import { LeafSprig, FlowerSprig, VineDivider } from "@/components/Botanicals";
 import { PHOTOS } from "@/lib/photos";
 import { batchCaffeine } from "@/lib/recipe";
 import { FREE_SHIP_FROM, SHIPPING_SINGLE, priceTiers, withRare } from "@/lib/pricing";
-import { getRareIds, recipeHasRare } from "@/lib/teas";
+import { batchPouchesLeft, getRareIds, getStockMap, recipeHasRare } from "@/lib/teas";
 import { formatPrice } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -22,12 +22,14 @@ export default async function Home() {
   let teaCount = 0;
   let dbError = false;
   let rareIds = new Set<string>();
+  let stock = new Map<string, number | null>();
 
   try {
-    [drops, teaCount, rareIds] = await Promise.all([
+    [drops, teaCount, rareIds, stock] = await Promise.all([
       prisma.drop.findMany({ where: { isActive: true }, orderBy: { createdAt: "asc" } }),
       prisma.inventoryIngredient.count({ where: { inStock: true } }),
       getRareIds(),
+      getStockMap(),
     ]);
   } catch {
     dbError = true;
@@ -107,7 +109,7 @@ export default async function Home() {
                 name={drop.name}
                 tiers={withRare(priceTiers(drop.price, drop.price3, drop.price5), recipeHasRare(drop.recipe, rareIds))}
                 rare={recipeHasRare(drop.recipe, rareIds)}
-                remaining={drop.batchQuantityRemaining}
+                remaining={batchPouchesLeft(drop, stock)}
                 total={drop.batchQuantityTotal}
                 vibeLine={drop.vibeLine}
                 image={drop.images[0]}

@@ -6,6 +6,7 @@ import SizePicker from "@/components/SizePicker";
 import type { MixSettingLike, PublicTea, RuleLike } from "@/lib/mix";
 import {
   generateMix,
+  mixPouchesInStock,
   mixName,
   mixSummary,
   type CaffeinePref,
@@ -109,6 +110,7 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
   const resultRef = useRef<HTMLDivElement>(null);
 
   const hasRare = !!items?.some((i) => i.tea.rare);
+  const inStock = items ? mixPouchesInStock(items, setting.packGrams) : 99;
   const tiers = withRare(priceTiers(setting.price, setting.price3, setting.price5), hasRare);
   const input: GeneratorInput = {
     mood: feel || "any",
@@ -140,6 +142,9 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
     setNoMatch(false);
     setRevealed(false);
     setItems(mix);
+    // Never offer more pouches than the shelf can fill.
+    const fill = mixPouchesInStock(mix, setting.packGrams);
+    setSize((s) => (s <= fill ? s : fill >= 3 ? 3 : 1));
     setPulled(true);
     timers.current.push(window.setTimeout(() => setPulled(false), 380));
     if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(30);
@@ -292,7 +297,12 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
           </ul>
 
           <div className="mt-5">
-            <SizePicker tiers={tiers} value={size} onChange={setSize} />
+            <SizePicker tiers={tiers} value={size} onChange={setSize} remaining={inStock} />
+            {inStock < 5 && (
+              <p className="text-[11px] text-[#8b6e4e] mt-2">
+                Only enough of these teas for {inStock} {inStock === 1 ? "pouch" : "pouches"} of this blend.
+              </p>
+            )}
           </div>
           <button
             type="button"
