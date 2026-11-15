@@ -44,7 +44,7 @@ export default function BuyButton({ dropId, price, remaining }: BuyButtonProps) 
           <select
             value={quantity}
             onChange={(e) => setQuantity(Number(e.target.value))}
-            className="border border-stone-300 px-3 py-2 text-sm bg-white"
+            className="border border-stone-300 rounded-full px-4 py-2 text-sm bg-[#f5f7ef]"
           >
             {Array.from({ length: maxQty }, (_, i) => i + 1).map((n) => (
               <option key={n} value={n}>
@@ -57,10 +57,10 @@ export default function BuyButton({ dropId, price, remaining }: BuyButtonProps) 
       <button
         onClick={handleBuy}
         disabled={soldOut || loading}
-        className={`w-full py-3.5 text-sm tracking-widest uppercase transition-colors ${
+        className={`w-full py-4 rounded-full text-sm tracking-widest uppercase transition-colors ${
           soldOut
-            ? "bg-stone-200 text-stone-400 cursor-not-allowed"
-            : "bg-[#3d4a3a] text-white hover:bg-[#2f3a2d]"
+            ? "bg-stone-200 text-stone-500 cursor-not-allowed"
+            : "bg-[#3d4a3a] text-[#f5f7ef] hover:bg-[#2b3a28]"
         }`}
       >
         {loading

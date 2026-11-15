@@ -22,17 +22,16 @@ export default function ProductCard({
   batchNo,
 }: ProductCardProps) {
   const soldOut = remaining <= 0;
-  const displayName = batchNo ? `No. ${batchNo.padStart(3, "0")} ${name}` : name;
 
   return (
     <Link href={`/collection/${slug}`} className="group block">
-      <div className="relative aspect-square bg-stone-200/50 overflow-hidden mb-3">
+      <div className="relative aspect-[4/5] bg-stone-200 overflow-hidden rounded-2xl mb-4 ring-1 ring-stone-200">
         {image ? (
           <Image
             src={image}
             alt={name}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="object-cover group-hover:scale-105 transition-transform duration-700"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
@@ -40,24 +39,35 @@ export default function ProductCard({
             ?
           </div>
         )}
+        <div className="absolute inset-x-0 top-0 p-3 flex justify-between gap-2">
+          {batchNo && (
+            <span className="bg-[#f5f7ef]/95 text-[#2b3a28] text-[11px] font-semibold tracking-wider uppercase px-3 py-1.5 rounded-full">
+              No. {batchNo.padStart(3, "0")}
+            </span>
+          )}
+          {!soldOut && (
+            <span
+              className={`ml-auto text-[11px] font-semibold tracking-wider uppercase px-3 py-1.5 rounded-full ${
+                remaining <= 5 ? "bg-[#7a5a3c] text-[#fbf6ef]" : "bg-[#2b3a28]/90 text-[#f5f7ef]"
+              }`}
+            >
+              {formatRemaining(remaining)}
+            </span>
+          )}
+        </div>
         {soldOut && (
-          <div className="absolute inset-0 bg-[#dedcd8]/70 flex items-center justify-center">
-            <span className="text-sm tracking-widest uppercase text-stone-500">Sold Out</span>
+          <div className="absolute inset-0 bg-[#2b3a28]/60 flex items-center justify-center">
+            <span className="text-sm tracking-widest uppercase text-[#f5f7ef]">Sold Out</span>
           </div>
         )}
       </div>
-      <h3 className="text-sm font-medium text-stone-800 mb-1">{displayName}</h3>
-      <p className="text-sm text-stone-600 mb-1">{formatPrice(price)}</p>
-      <p
-        className={`text-xs tracking-wide uppercase ${
-          soldOut ? "text-stone-400" : remaining <= 5 ? "text-[#8b6e4e] font-medium" : "text-[#3d4a3a]"
-        }`}
-      >
-        {formatRemaining(remaining)}
-      </p>
-      {vibeLine && (
-        <p className="text-xs text-stone-400 mt-1 italic">{vibeLine}</p>
-      )}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="font-display text-xl text-[#2b3a28] mb-0.5">{name}</h3>
+          {vibeLine && <p className="text-sm text-stone-500 italic">{vibeLine}</p>}
+        </div>
+        <p className="text-base font-medium text-[#5b4532] whitespace-nowrap">{formatPrice(price)}</p>
+      </div>
     </Link>
   );
 }

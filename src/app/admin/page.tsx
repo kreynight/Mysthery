@@ -123,8 +123,8 @@ export default function AdminPage() {
           href="/admin/drops"
           className="border border-stone-200 p-6 hover:border-stone-400 transition-colors"
         >
-          <h2 className="text-sm font-medium text-stone-800 mb-1">Collections</h2>
-          <p className="text-xs text-stone-400">Create, edit, and manage collections</p>
+          <h2 className="text-sm font-medium text-stone-800 mb-1">Batches</h2>
+          <p className="text-xs text-stone-400">Create, edit, and manage batches</p>
         </Link>
         <Link
           href="/admin/orders"
@@ -139,6 +139,13 @@ export default function AdminPage() {
         >
           <h2 className="text-sm font-medium text-stone-800 mb-1">Inventory</h2>
           <p className="text-xs text-stone-400">Manage ingredient library and edit details</p>
+        </Link>
+        <Link
+          href="/admin/mix-rules"
+          className="border border-stone-200 p-6 hover:border-stone-400 transition-colors"
+        >
+          <h2 className="text-sm font-medium text-stone-800 mb-1">Make a Mix rules</h2>
+          <p className="text-xs text-stone-400">Pairing rules, price, and tea families for the public builder</p>
         </Link>
         <Link
           href="/admin/batch-generator"

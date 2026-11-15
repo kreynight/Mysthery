@@ -1,13 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #dedcd8;
-  --background-soft: #e6e4e0;
-  --foreground: #232220;
+  /* Earthy palette: sage ground, forest greens, bark browns, a dried-rose floral accent */
+  --background: #eef2e6;
+  --background-soft: #f5f7ef;
+  --foreground: #2a2219;
   --accent: #3d4a3a;
-  --accent-deep: #2f3a2d;
-  --accent-warm: #8b6e4e;
-  --muted: #8a8782;
+  --accent-deep: #2b3a28;
+  --accent-warm: #7a5a3c;
+  --leaf: #5e7a4c;
+  --bark: #5b4532;
+  --petal: #b07a6e;
+  --muted: #5f6e52;
 }
 
 @theme inline {
@@ -16,12 +20,31 @@
   --color-accent: var(--accent);
   --color-accent-warm: var(--accent-warm);
   --color-muted: var(--muted);
+  --color-leaf: var(--leaf);
+  --color-bark: var(--bark);
+  --color-petal: var(--petal);
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   --font-mono: ui-monospace, "Cascadia Mono", monospace;
 }
 
+/* Remap Tailwind's stone scale (used across every page and the admin)
+   from beige-grey to sage greens and bark browns. */
+@theme {
+  --color-stone-50: #f4f7ee;
+  --color-stone-100: #e7eddd;
+  --color-stone-200: #d3dec6;
+  --color-stone-300: #b3c3a2;
+  --color-stone-400: #5f6e52;
+  --color-stone-500: #55634a;
+  --color-stone-600: #5b4532;
+  --color-stone-700: #4a3828;
+  --color-stone-800: #2b3a28;
+  --color-stone-900: #231b13;
+}
+
 body {
-  /* Soft top-down light over a grey base for subtle depth */
+  /* Soft top-down light over a sage base for subtle depth */
   background-color: var(--background);
   background-image:
     radial-gradient(ellipse 1200px 800px at 50% -10%, var(--background-soft) 0%, transparent 70%);
@@ -31,7 +54,7 @@ body {
   position: relative;
 }
 
-/* Fine grain texture overlay for a tactile, stone-like grey surface */
+/* Fine grain texture overlay for a tactile, paper-like surface */
 body::before {
   content: "";
   position: fixed;
@@ -50,21 +73,21 @@ body > * {
 
 ::selection {
   background: var(--accent);
-  color: #f5f4f1;
+  color: #f5f7ef;
 }
 
 /* Blog prose styling */
 .prose-mystherie {
   font-size: 0.9375rem;
   line-height: 1.8;
-  color: #57534e;
+  color: #4a3828;
 }
 
 .prose-mystherie h2 {
   font-size: 1.25rem;
   font-weight: 300;
   letter-spacing: 0.025em;
-  color: #1c1917;
+  color: #2b3a28;
   margin-top: 2.5rem;
   margin-bottom: 0.75rem;
 }
@@ -72,7 +95,7 @@ body > * {
 .prose-mystherie h3 {
   font-size: 1rem;
   font-weight: 500;
-  color: #1c1917;
+  color: #2b3a28;
   margin-top: 2rem;
   margin-bottom: 0.5rem;
 }
@@ -92,7 +115,7 @@ body > * {
 }
 
 .prose-mystherie strong {
-  color: #1c1917;
+  color: #2b3a28;
   font-weight: 600;
 }
 
@@ -118,7 +141,7 @@ body > * {
   border-left: 2px solid var(--accent);
   padding-left: 1rem;
   margin: 1.5rem 0;
-  color: #78716c;
+  color: #5b4532;
   font-style: italic;
 }
 
@@ -132,9 +155,9 @@ body > * {
 .prose-mystherie th {
   text-align: left;
   font-weight: 500;
-  color: #1c1917;
+  color: #2b3a28;
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid #d6d3d1;
+  border-bottom: 1px solid #d3dec6;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-size: 0.6875rem;
@@ -142,16 +165,27 @@ body > * {
 
 .prose-mystherie td {
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid #e7e5e4;
+  border-bottom: 1px solid #e7eddd;
 }
 
 .prose-mystherie hr {
   border: none;
-  border-top: 1px solid #e7e5e4;
+  border-top: 1px solid #e7eddd;
   margin: 2rem 0;
 }
 
 .prose-mystherie img {
   max-width: 100%;
   border-radius: 0;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+}
+
+/* Botanical divider line used between sections */
+.vine-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #b3c3a2 20%, #b3c3a2 80%, transparent);
 }

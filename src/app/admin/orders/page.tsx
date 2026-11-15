@@ -5,8 +5,9 @@ import Link from "next/link";
 
 interface Order {
   id: string;
-  dropId: string;
-  drop: { name: string; slug: string };
+  dropId: string | null;
+  drop: { name: string; slug: string } | null;
+  mixItems: string | null;
   quantity: number;
   email: string | null;
   stripeSessionId: string;
@@ -64,7 +65,7 @@ export default function AdminOrdersPage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
                 <div>
                   <span className="text-sm font-medium text-stone-800">
-                    {order.drop.name}
+                    {order.drop ? order.drop.name : `Custom mix: ${order.mixItems || "teas not recorded"}`}
                   </span>
                   <span className="text-xs text-stone-400 ml-2">x{order.quantity}</span>
                 </div>

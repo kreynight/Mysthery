@@ -33,8 +33,9 @@ model Drop {
 
 model Order {
   id              String   @id @default(uuid())
-  dropId          String
-  drop            Drop     @relation(fields: [dropId], references: [id])
+  dropId          String?
+  drop            Drop?    @relation(fields: [dropId], references: [id])
+  mixItems        String?  // custom mix: tea names, comma-separated
   quantity        Int      @default(1)
   email           String?
   stripeSessionId String   @unique
@@ -43,6 +44,8 @@ model Order {
   totalAmount     Int      // cents
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  @@index([dropId])
 }
 
 model InventoryIngredient {
@@ -61,6 +64,26 @@ model InventoryIngredient {
   verificationLevel String?  // THREAD_LOG, ASSUMED_PARTIAL
   notes             String?
   inStock           Boolean  @default(true)
+  mixFamily         String?  // override for the mix builder family; "none" hides it from mixing
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+}
+
+// Pairing rules for the public "make your own mix" builder.
+// A rule blocks familyA from being mixed with familyB. familyB "*" means familyA is never mixed.
+model MixRule {
+  id        String   @id @default(uuid())
+  familyA   String
+  familyB   String
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+model MixSetting {
+  id        String   @id @default("default")
+  minTeas   Int      @default(2)
+  maxTeas   Int      @default(3)
+  price     Int      @default(1600) // cents
+  isEnabled Boolean  @default(true)
+  updatedAt DateTime @default(now()) @updatedAt
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SITE_NAME } from "@/lib/constants";
 
-function BotanicalLogo() {
+export function BotanicalLogo() {
   return (
     <svg
       width="28"
@@ -53,31 +53,43 @@ function BotanicalLogo() {
   );
 }
 
+const NAV = [
+  { href: "/#batches", label: "Batches" },
+  { href: "/teas", label: "Tea Library" },
+  { href: "/mix", label: "Make a Mix" },
+  { href: "/blog", label: "Journal" },
+  { href: "/about", label: "About" },
+];
+
 export default function Header() {
   return (
-    <header className="w-full border-b border-stone-200">
-      <div className="max-w-6xl mx-auto px-4 py-5 flex items-center justify-between">
+    <header className="w-full border-b border-stone-200 bg-[#eef2e6]/80 backdrop-blur-sm">
+      <div className="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
         <Link href="/" className="flex items-center gap-3 group">
           <BotanicalLogo />
           <div className="flex flex-col">
-            <span className="text-xl tracking-widest uppercase font-light text-[#3d4a3a] group-hover:text-[#2f3a2d] transition-colors">
+            <span className="text-xl tracking-widest uppercase font-light text-[#3d4a3a] group-hover:text-[#2b3a28] transition-colors">
               {SITE_NAME}
             </span>
-            <span className="text-[9px] tracking-[0.25em] uppercase text-stone-400 -mt-0.5">
+            <span className="text-[9px] tracking-[0.25em] uppercase text-[#7a5a3c] -mt-0.5">
               Tea Atelier
             </span>
           </div>
         </Link>
-        <nav className="flex gap-6 text-xs tracking-wide uppercase text-stone-400">
-          <Link href="/blog" className="hover:text-[#3d4a3a] transition-colors">
-            Journal
-          </Link>
-          <Link href="/about" className="hover:text-[#3d4a3a] transition-colors">
-            About
-          </Link>
-          <Link href="/faq" className="hover:text-[#3d4a3a] transition-colors">
-            FAQ
-          </Link>
+        <nav aria-label="Main" className="flex flex-wrap gap-x-5 gap-y-2 text-xs tracking-wide uppercase text-stone-500">
+          {NAV.map((n) => (
+            <Link
+              key={n.href}
+              href={n.href}
+              className={
+                n.href === "/mix"
+                  ? "text-[#f5f7ef] bg-[#3d4a3a] hover:bg-[#2b3a28] px-3 py-1.5 -my-1.5 rounded-full transition-colors"
+                  : "hover:text-[#3d4a3a] transition-colors py-1"
+              }
+            >
+              {n.label}
+            </Link>
+          ))}
         </nav>
       </div>
     </header>

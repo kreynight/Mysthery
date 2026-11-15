@@ -21,7 +21,7 @@ export default function ImageGallery({ images, name }: ImageGalleryProps) {
 
   return (
     <div>
-      <div className="relative aspect-square bg-stone-200/50 overflow-hidden mb-3">
+      <div className="relative aspect-square bg-stone-200 overflow-hidden rounded-2xl mb-3">
         <Image
           src={images[selected]}
           alt={`${name} - image ${selected + 1}`}
@@ -35,9 +35,11 @@ export default function ImageGallery({ images, name }: ImageGalleryProps) {
         <div className="grid grid-cols-6 gap-2">
           {images.map((img, i) => (
             <button
+              type="button"
+              aria-label={`Show image ${i + 1}`}
               key={i}
               onClick={() => setSelected(i)}
-              className={`relative aspect-square bg-stone-200/50 overflow-hidden border-2 transition-colors ${
+              className={`relative aspect-square bg-stone-200 overflow-hidden rounded-lg border-2 transition-colors ${
                 i === selected ? "border-[#3d4a3a]" : "border-transparent"
               }`}
             >

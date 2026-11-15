@@ -27,6 +27,23 @@ export async function POST(req: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
+    if (session.metadata?.kind === "mix") {
+      try {
+        await prisma.order.update({
+          where: { stripeSessionId: session.id },
+          data: {
+            status: "paid",
+            email: session.customer_details?.email || null,
+            stripePaymentId: (session.payment_intent as string) || null,
+          },
+        });
+      } catch (err) {
+        console.error("Error processing mix webhook:", err);
+        return NextResponse.json({ error: "Processing error." }, { status: 500 });
+      }
+      return NextResponse.json({ received: true });
+    }
+
     const dropId = session.metadata?.dropId;
     const quantity = parseInt(session.metadata?.quantity || "1", 10);
 
