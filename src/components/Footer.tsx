@@ -14,6 +14,18 @@ function instagramHref(value?: string): string | null {
 
 const INSTAGRAM_HREF = instagramHref(process.env.NEXT_PUBLIC_INSTAGRAM_URL);
 
+// NEXT_PUBLIC_TIKTOK_URL may hold a full URL or just a handle ("@name" or "name").
+function tiktokHref(value?: string): string | null {
+  const v = value?.trim();
+  if (!v) return null;
+  if (/^https?:\/\//i.test(v)) return v;
+  const handle = v.replace(/^@/, "");
+  if (!/^[A-Za-z0-9._]{2,24}$/.test(handle)) return null;
+  return `https://www.tiktok.com/@${handle}`;
+}
+
+const TIKTOK_HREF = tiktokHref(process.env.NEXT_PUBLIC_TIKTOK_URL);
+
 export default function Footer() {
   return (
     <footer className="relative w-full mt-24 bg-[#2b3a28] text-[#d3dec6] overflow-hidden">
@@ -56,6 +68,16 @@ export default function Footer() {
                 className="hover:text-white transition-colors"
               >
                 Instagram
+              </a>
+            )}
+            {TIKTOK_HREF && (
+              <a
+                href={TIKTOK_HREF}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors"
+              >
+                TikTok
               </a>
             )}
           </nav>
