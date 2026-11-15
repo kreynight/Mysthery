@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SITE_NAME } from "@/lib/constants";
+import NavLinks from "@/components/NavLinks";
 
 export function BotanicalLogo() {
   return (
@@ -53,14 +54,6 @@ export function BotanicalLogo() {
   );
 }
 
-const NAV = [
-  { href: "/#batches", label: "Batches" },
-  { href: "/teas", label: "Tea Library" },
-  { href: "/mix", label: "Make a Mix" },
-  { href: "/blog", label: "Journal" },
-  { href: "/about", label: "About" },
-];
-
 export default function Header() {
   return (
     <header className="w-full border-b border-stone-200 bg-[#eef2e6]/80 backdrop-blur-sm">
@@ -77,19 +70,7 @@ export default function Header() {
           </div>
         </Link>
         <nav aria-label="Main" className="-mx-4 px-4 w-[calc(100%+2rem)] sm:w-auto sm:mx-0 sm:px-0 flex gap-x-5 overflow-x-auto whitespace-nowrap py-1 text-xs tracking-wide uppercase text-stone-500 [scrollbar-width:none]">
-          {NAV.map((n) => (
-            <Link
-              key={n.href}
-              href={n.href}
-              className={
-                n.href === "/mix"
-                  ? "text-[#f5f7ef] bg-[#3d4a3a] hover:bg-[#2b3a28] px-3 py-1.5 -my-1.5 rounded-full transition-colors"
-                  : "hover:text-[#3d4a3a] transition-colors py-1"
-              }
-            >
-              {n.label}
-            </Link>
-          ))}
+          <NavLinks />
         </nav>
       </div>
     </header>

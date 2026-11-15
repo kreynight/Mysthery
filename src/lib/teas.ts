@@ -28,6 +28,7 @@ export async function getPublicTeas(): Promise<PublicTea[]> {
       wellnessFunction: true,
       mixFamily: true,
       culturalRoots: true,
+      brand: true,
       gramsOnHand: true,
       rare: true,
     },

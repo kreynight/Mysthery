@@ -86,6 +86,8 @@ export interface PublicTea {
   offer: TeaOffer | null;
   /** Grams on hand, or null when not counted. Mixes never use more than this. */
   stock: number | null;
+  /** Where the tea comes from, as a short country name, or null when the record doesn't say. */
+  country: string | null;
 }
 
 interface RawIngredient {
@@ -98,6 +100,7 @@ interface RawIngredient {
   culturalRoots?: string | null;
   gramsOnHand?: number | null;
   rare?: boolean | null;
+  brand?: string | null;
 }
 
 const SLEEP_WORDS = ["sleep", "night", "noches", "calm", "stress", "lavender", "chamomile", "bedtime", "relax", "knockout"];
@@ -224,12 +227,49 @@ export function toPublicTea(ing: RawIngredient & { id: string; inventoryNo: numb
     harsh,
     rare: !!ing.rare || isLowStock(ing.gramsOnHand),
     stock: ing.gramsOnHand ?? null,
+    country: countryOf(ing.culturalRoots) ?? brandCountry(ing.brand),
     offer: teaOffer({
       gramsOnHand: ing.gramsOnHand ?? null,
       rare: !!ing.rare,
       premium: isPremiumOrigin(ing.culturalRoots),
     }),
   };
+}
+
+// Countries read from an ingredient's origin notes. The first one named wins ("China & France" is China).
+const COUNTRIES: [string, RegExp][] = [
+  ["Haiti", /haiti/],
+  ["Japan", /japan|kyoto|uji/],
+  ["China", /china|chinese|yunnan|guangdong/],
+  ["India", /india|assam|darjeeling/],
+  ["UK", /united kingdom|\bbritish\b|london|england/],
+  ["France", /france|paris/],
+  ["Italy", /ital(y|ian)|florence/],
+  ["Spain", /spain/],
+  ["Mexico", /mexico/],
+  ["Croatia", /croatia/],
+  ["Russia", /russia/],
+  ["Pakistan", /pakistan/],
+  ["Brazil", /bras[iy]l|brazil/],
+  ["USA", /\busa\b|united states|seattle|hawai|florida|, wa\b/],
+  ["South America", /south americ/],
+];
+
+export function countryOf(roots: string | null | undefined): string | null {
+  const r = (roots || "").toLowerCase();
+  let best: { name: string; at: number } | null = null;
+  for (const [name, re] of COUNTRIES) {
+    const m = re.exec(r);
+    if (m && (!best || m.index < best.at)) best = { name, at: m.index };
+  }
+  return best?.name ?? null;
+}
+
+/** Blends whose notes name a tradition, not a place, take their maker's home country. */
+function brandCountry(brand: string | null | undefined): string | null {
+  const b = (brand || "").toLowerCase();
+  if (/miro|seattle spice|traditional medicinals|tao of tea|bigelow|great value|spice & tea exchange|tea haven/.test(b)) return "USA";
+  return null;
 }
 
 function matches(tea: PublicTea, key: string): boolean {
