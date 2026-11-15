@@ -5,7 +5,8 @@ import ProductCard from "@/components/ProductCard";
 import { LeafSprig, FlowerSprig, VineDivider } from "@/components/Botanicals";
 import { PHOTOS } from "@/lib/photos";
 import { batchCaffeine } from "@/lib/recipe";
-import { FREE_SHIP_FROM, SHIPPING_SINGLE, priceTiers } from "@/lib/pricing";
+import { FREE_SHIP_FROM, SHIPPING_SINGLE, priceTiers, withRare } from "@/lib/pricing";
+import { getRareIds, recipeHasRare } from "@/lib/teas";
 import { formatPrice } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -20,11 +21,13 @@ export default async function Home() {
   let drops: Awaited<ReturnType<typeof prisma.drop.findMany>> = [];
   let teaCount = 0;
   let dbError = false;
+  let rareIds = new Set<string>();
 
   try {
-    [drops, teaCount] = await Promise.all([
+    [drops, teaCount, rareIds] = await Promise.all([
       prisma.drop.findMany({ where: { isActive: true }, orderBy: { createdAt: "asc" } }),
       prisma.inventoryIngredient.count({ where: { inStock: true } }),
+      getRareIds(),
     ]);
   } catch {
     dbError = true;
@@ -102,7 +105,8 @@ export default async function Home() {
                 key={drop.id}
                 slug={drop.slug}
                 name={drop.name}
-                tiers={priceTiers(drop.price, drop.price3, drop.price5)}
+                tiers={withRare(priceTiers(drop.price, drop.price3, drop.price5), recipeHasRare(drop.recipe, rareIds))}
+                rare={recipeHasRare(drop.recipe, rareIds)}
                 remaining={drop.batchQuantityRemaining}
                 total={drop.batchQuantityTotal}
                 vibeLine={drop.vibeLine}

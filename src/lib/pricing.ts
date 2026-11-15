@@ -54,3 +54,60 @@ export function shippingOption(pouches: number) {
     },
   };
 }
+
+// ---- Single pouches from the Tea Library ----
+
+export const TEA_POUCH_GRAMS = 28;
+export const TASTING_GRAMS = 10;
+/** Under this many grams on hand a tea is low stock, rare, and sold as a tasting pouch. */
+export const LOW_STOCK_GRAMS = 30;
+export const TEA_PRICE = 1600;
+export const TEA_PREMIUM_PRICE = 2200; // Haitian and Chinese teas
+export const RARE_EXTRA = 800; // a full pouch of a tea marked rare
+export const TASTING_PRICE = 1400;
+export const TASTING_PREMIUM_PRICE = 1800;
+/** Added per pouch when a batch or generated mix includes a rare tea. */
+export const RARE_BLEND_EXTRA = 400;
+
+export interface TeaOffer {
+  grams: number;
+  price: number;
+  premium: boolean;
+  rare: boolean;
+  lowStock: boolean;
+  tasting: boolean;
+}
+
+export function isPremiumOrigin(roots: string | null | undefined): boolean {
+  const r = (roots || "").toLowerCase();
+  return /haiti|china|chinese|yunnan/.test(r) && !/france/.test(r);
+}
+
+export function isLowStock(gramsOnHand: number | null | undefined): boolean {
+  return gramsOnHand != null && gramsOnHand < LOW_STOCK_GRAMS;
+}
+
+/** What one pouch of a library tea costs and weighs. Null when there is too little left to sell. */
+export function teaOffer(t: { gramsOnHand: number | null; rare: boolean; premium: boolean }): TeaOffer | null {
+  const lowStock = isLowStock(t.gramsOnHand);
+  const rare = t.rare || lowStock;
+  if (lowStock) {
+    const grams = Math.min(TASTING_GRAMS, t.gramsOnHand ?? 0);
+    if (grams < 4) return null;
+    return { grams, price: t.premium ? TASTING_PREMIUM_PRICE : TASTING_PRICE, premium: t.premium, rare, lowStock, tasting: true };
+  }
+  return {
+    grams: TEA_POUCH_GRAMS,
+    price: (t.premium ? TEA_PREMIUM_PRICE : TEA_PRICE) + (rare ? RARE_EXTRA : 0),
+    premium: t.premium,
+    rare,
+    lowStock,
+    tasting: false,
+  };
+}
+
+/** Price tiers with the rare premium added when a blend includes a rare tea. */
+export function withRare(tiers: PriceTiers, hasRare: boolean): PriceTiers {
+  if (!hasRare) return tiers;
+  return { 1: tiers[1] + RARE_BLEND_EXTRA, 3: tiers[3] + RARE_BLEND_EXTRA * 3, 5: tiers[5] + RARE_BLEND_EXTRA * 5 };
+}

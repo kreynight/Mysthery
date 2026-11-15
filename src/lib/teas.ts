@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { buildOrderRecipe, type OrderRecipe, type RecipeItem } from "@/lib/recipe";
+import { buildOrderRecipe, parseRecipeItems, type OrderRecipe, type RecipeItem } from "@/lib/recipe";
+import { LOW_STOCK_GRAMS } from "@/lib/pricing";
 import { DEFAULT_RULES, toPublicTea, type MixSettingLike, type PublicTea, type RuleLike } from "@/lib/mix";
 
 const DEFAULT_SETTING: MixSettingLike = { minTeas: 2, maxTeas: 3, price: 1600, price3: null, price5: null, isEnabled: true, packGrams: 28 };
@@ -18,6 +19,9 @@ export async function getPublicTeas(): Promise<PublicTea[]> {
       flavorNotes: true,
       wellnessFunction: true,
       mixFamily: true,
+      culturalRoots: true,
+      gramsOnHand: true,
+      rare: true,
     },
   });
   return rows.map(toPublicTea);
@@ -72,4 +76,22 @@ export async function snapshotRecipe(
     packGrams,
     pouches
   );
+}
+
+/** Ids of teas that are low stock or marked rare. */
+export async function getRareIds(): Promise<Set<string>> {
+  try {
+    const rows = await prisma.inventoryIngredient.findMany({
+      where: { OR: [{ rare: true }, { gramsOnHand: { lt: LOW_STOCK_GRAMS } }] },
+      select: { id: true },
+    });
+    return new Set(rows.map((r) => r.id));
+  } catch {
+    return new Set();
+  }
+}
+
+/** True when a batch recipe uses a rare tea. */
+export function recipeHasRare(recipe: unknown, rareIds: Set<string>): boolean {
+  return parseRecipeItems(recipe).some((i) => !!i.ingredientId && rareIds.has(i.ingredientId));
 }

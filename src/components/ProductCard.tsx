@@ -14,6 +14,7 @@ interface ProductCardProps {
   batchNo?: string | null;
   mood?: string | null;
   caffeine?: string | null;
+  rare?: boolean;
 }
 
 /** Compact batch card: a row on phones, a short tile on larger screens. Sizes and prices at a glance. */
@@ -28,9 +29,10 @@ export default function ProductCard({
   batchNo,
   mood,
   caffeine,
+  rare = false,
 }: ProductCardProps) {
   const soldOut = remaining <= 0;
-  const meta = [mood, caffeine].filter(Boolean).join(" · ");
+  const meta = [rare ? "Rare tea inside" : null, mood, caffeine].filter(Boolean).join(" · ");
   const href = `/collection/${slug}`;
 
   return (

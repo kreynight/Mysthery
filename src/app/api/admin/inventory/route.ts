@@ -66,6 +66,8 @@ export async function POST(req: NextRequest) {
         verificationLevel: data.verificationLevel || null,
         notes: data.notes || null,
         inStock: data.inStock ?? true,
+        gramsOnHand: toGrams(data.gramsOnHand),
+        rare: !!data.rare,
       },
     });
 
@@ -84,6 +86,8 @@ export async function PUT(req: NextRequest) {
   try {
     const data = await req.json();
     const { id, ...fields } = data;
+    if ("gramsOnHand" in fields) fields.gramsOnHand = toGrams(fields.gramsOnHand);
+    if ("rare" in fields) fields.rare = !!fields.rare;
 
     const ingredient = await prisma.inventoryIngredient.update({
       where: { id },
@@ -95,4 +99,11 @@ export async function PUT(req: NextRequest) {
     console.error("Update ingredient error:", error);
     return NextResponse.json({ error: "Failed to update ingredient." }, { status: 500 });
   }
+}
+
+/** Blank means "not counted"; otherwise a whole number of grams, never below zero. */
+function toGrams(v: unknown): number | null {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) ? Math.max(0, n) : null;
 }

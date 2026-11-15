@@ -27,6 +27,32 @@ export async function POST(req: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
+    if (session.metadata?.kind === "tea") {
+      try {
+        const teaId = session.metadata.teaId;
+        const grams = parseInt(session.metadata.grams || "0", 10);
+        await prisma.order.update({
+          where: { stripeSessionId: session.id },
+          data: {
+            status: "paid",
+            email: session.customer_details?.email || null,
+            stripePaymentId: (session.payment_intent as string) || null,
+          },
+        });
+        if (teaId && grams > 0) {
+          // Only teas with a known amount on hand are counted down.
+          await prisma.inventoryIngredient.updateMany({
+            where: { id: teaId, gramsOnHand: { not: null } },
+            data: { gramsOnHand: { decrement: grams } },
+          });
+        }
+      } catch (err) {
+        console.error("Error processing tea webhook:", err);
+        return NextResponse.json({ error: "Processing error." }, { status: 500 });
+      }
+      return NextResponse.json({ received: true });
+    }
+
     if (session.metadata?.kind === "mix") {
       try {
         await prisma.order.update({

@@ -5,7 +5,8 @@ import BuyButton from "@/components/BuyButton";
 import { FlowerSprig } from "@/components/Botanicals";
 import Link from "next/link";
 import { formatPrice, formatRemaining } from "@/lib/format";
-import { parseSize, priceTiers } from "@/lib/pricing";
+import { parseSize, priceTiers, withRare, RARE_BLEND_EXTRA } from "@/lib/pricing";
+import { getRareIds, recipeHasRare } from "@/lib/teas";
 import { batchCaffeine, packLabel } from "@/lib/recipe";
 
 export const dynamic = "force-dynamic";
@@ -35,6 +36,8 @@ export default async function CollectionPage({ params, searchParams }: PageProps
   if (!drop || !drop.isActive) notFound();
 
   const batchNo = extractBatchNo(drop.dropNotes);
+  const hasRare = recipeHasRare(drop.recipe, await getRareIds());
+  const tiers = withRare(priceTiers(drop.price, drop.price3, drop.price5), hasRare);
   
   // Descriptive but never names the teas: the recipe stays in the admin.
   const caffeine = batchCaffeine(drop.caffeine);
@@ -47,6 +50,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
 
   const details: { label: string; value: string }[] = [];
   details.push({ label: "Pouch", value: packLabel(drop.packGrams || 28) });
+  if (hasRare) details.push({ label: "Rare tea", value: `Includes a rare, low-stock tea (+${formatPrice(RARE_BLEND_EXTRA)} a pouch)` });
   details.push({ label: "Batch size", value: `${drop.batchQuantityTotal} pouches, then it's gone` });
   if (drop.tastingNotes && drop.flavorDirection) details.push({ label: "Tasting notes", value: drop.tastingNotes });
   if (drop.ingredientMayInclude) details.push({ label: "May include", value: drop.ingredientMayInclude });
@@ -89,7 +93,12 @@ export default async function CollectionPage({ params, searchParams }: PageProps
           )}
 
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-2xl font-medium text-[#5b4532]">From {formatPrice(drop.price)}</span>
+            <span className="text-2xl font-medium text-[#5b4532]">From {formatPrice(tiers[1])}</span>
+            {hasRare && (
+              <span className="text-[10px] tracking-wider uppercase rounded-full bg-[#7a5a3c] text-[#fbf6ef] px-2.5 py-1">
+                Rare tea inside
+              </span>
+            )}
           </div>
 
           <p
@@ -108,7 +117,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
 
           <BuyButton
             dropId={drop.id}
-            tiers={priceTiers(drop.price, drop.price3, drop.price5)}
+            tiers={tiers}
             remaining={drop.batchQuantityRemaining}
             initialSize={initialSize <= drop.batchQuantityRemaining ? initialSize : 1}
           />

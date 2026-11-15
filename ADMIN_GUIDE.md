@@ -77,6 +77,14 @@ This guide explains how to use the admin panel to manage your tea drops, view or
 - Shipping is added at Stripe checkout: $6 on a single pouch, free on 3 or more. Change it in `src/lib/pricing.ts`.
 - A 3 or 5 pouch order takes 3 or 5 pouches off the batch count. The order's blend card shows grams for every pouch.
 
+## Single pouches, low stock and rare teas
+
+- Every tea in the Tea Library can be bought on its own as a 1 oz (28 g) pouch: $16, or $22 for Haitian and Chinese teas.
+- Set **Grams on hand** for each tea under **Inventory**. Under 30 g it shows as **Low stock** and sells as a 10 g tasting pouch ($14, or $18 for Haitian and Chinese). Under 4 g it shows as sold out. Each single-pouch sale takes its grams off the count.
+- Tick **Rare** on any tea to add the rare premium. A rare 1 oz pouch costs $8 more.
+- Batches and generated mixes that include a rare or low stock tea cost $4 more per pouch, and show "Rare tea inside".
+- Single-pouch orders show as "Single pouch: tea name" under **Orders**.
+
 ## Make a Mix (mix generator)
 
 Customers tap optional picks (taste, feel, caffeine), pull the lever, and the site generates 2 to 3 teas from what's in stock, following the mix rules. The price for 1, 3 or 5 pouches shows the moment the blend lands. They can pull again as often as they like. The lead tea is 2 parts and the others 1 part each. Prices, tea count and pouch size are under **Mix rules**.

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { LOW_STOCK_GRAMS } from "@/lib/pricing";
 
 interface Ingredient {
   id: string;
@@ -19,6 +20,8 @@ interface Ingredient {
   verificationLevel: string | null;
   notes: string | null;
   inStock: boolean;
+  gramsOnHand: number | null;
+  rare: boolean;
 }
 
 type EditForm = {
@@ -34,6 +37,8 @@ type EditForm = {
   format: string;
   notes: string;
   inStock: boolean;
+  gramsOnHand: string;
+  rare: boolean;
 };
 
 const EMPTY_FORM: EditForm = {
@@ -49,6 +54,8 @@ const EMPTY_FORM: EditForm = {
   format: "",
   notes: "",
   inStock: true,
+  gramsOnHand: "",
+  rare: false,
 };
 
 const CATEGORY_OPTIONS = [
@@ -147,6 +154,8 @@ export default function AdminInventoryPage() {
       format: ing.format || "",
       notes: ing.notes || "",
       inStock: ing.inStock,
+      gramsOnHand: ing.gramsOnHand == null ? "" : String(ing.gramsOnHand),
+      rare: ing.rare,
     });
     setExpanded(ing.id);
   };
@@ -305,6 +314,16 @@ export default function AdminInventoryPage() {
                       {ing.culturalRoots}
                     </span>
                   )}
+                  {ing.gramsOnHand != null && ing.gramsOnHand < LOW_STOCK_GRAMS && (
+                    <span className="text-[10px] tracking-wider uppercase text-white bg-[#8b6e4e] px-2 py-0.5 shrink-0">
+                      Low stock · {ing.gramsOnHand} g
+                    </span>
+                  )}
+                  {ing.rare && (
+                    <span className="text-[10px] tracking-wider uppercase text-white bg-[#7a5a3c] px-2 py-0.5 shrink-0">
+                      Rare
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <button
@@ -416,6 +435,7 @@ export default function AdminInventoryPage() {
                       placeholder="Format"
                       className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
                     />
+                    <StockFields form={editForm} setForm={setEditForm} />
                   </div>
                   <textarea
                     value={editForm.notes}
@@ -445,6 +465,7 @@ export default function AdminInventoryPage() {
                     {ing.ingredientsKey && <Detail label="Ingredients" value={ing.ingredientsKey} />}
                     {ing.format && <Detail label="Format" value={ing.format} />}
                     {ing.verificationLevel && <Detail label="Verification" value={ing.verificationLevel} />}
+                    {ing.gramsOnHand != null && <Detail label="On hand" value={`${ing.gramsOnHand} g`} />}
                     {ing.notes && <Detail label="Notes" value={ing.notes} />}
                   </div>
                 </div>
@@ -557,6 +578,7 @@ function IngredientForm({
           onChange={(e) => setForm({ ...form, format: e.target.value })}
           className="border border-stone-300 px-3 py-2 text-sm bg-transparent"
         />
+        <StockFields form={form} setForm={setForm} />
       </div>
       <textarea
         placeholder="Notes"
@@ -572,6 +594,30 @@ function IngredientForm({
         {submitLabel}
       </button>
     </form>
+  );
+}
+
+/** Grams on hand and the rare flag. Under 30 g the tea is marked low stock and sold as a tasting pouch. */
+function StockFields({ form, setForm }: { form: EditForm; setForm: (f: EditForm) => void }) {
+  return (
+    <>
+      <label className="flex items-center gap-2 border border-stone-300 px-3 py-2 text-sm">
+        <input
+          type="number"
+          min={0}
+          inputMode="numeric"
+          value={form.gramsOnHand}
+          onChange={(e) => setForm({ ...form, gramsOnHand: e.target.value })}
+          placeholder="Grams on hand"
+          className="w-full bg-transparent outline-none"
+        />
+        <span className="text-stone-400 text-xs">g</span>
+      </label>
+      <label className="flex items-center gap-2 border border-stone-300 px-3 py-2 text-sm cursor-pointer">
+        <input type="checkbox" checked={form.rare} onChange={(e) => setForm({ ...form, rare: e.target.checked })} />
+        <span>Rare (extra premium price)</span>
+      </label>
+    </>
   );
 }
 

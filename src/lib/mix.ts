@@ -1,3 +1,4 @@
+import { isLowStock, isPremiumOrigin, teaOffer, type TeaOffer } from "@/lib/pricing";
 // Shared logic for the public tea library and the "make your own mix" builder.
 // Safe to import from client components: no database access here.
 
@@ -79,6 +80,10 @@ export interface PublicTea {
   moods: string[];
   /** Strongly bitter or single-purpose teas the generator avoids unless swapped in. */
   harsh: boolean;
+  /** Low stock or marked rare: blends that use it cost a little more. */
+  rare: boolean;
+  /** What a single pouch of this tea sells for, or null when too little is left. */
+  offer: TeaOffer | null;
 }
 
 interface RawIngredient {
@@ -88,6 +93,9 @@ interface RawIngredient {
   wellnessFunction?: string | null;
   flavorNotes?: string | null;
   mixFamily?: string | null;
+  culturalRoots?: string | null;
+  gramsOnHand?: number | null;
+  rare?: boolean | null;
 }
 
 const SLEEP_WORDS = ["sleep", "night", "noches", "calm", "stress", "lavender", "chamomile", "bedtime", "relax", "knockout"];
@@ -212,6 +220,12 @@ export function toPublicTea(ing: RawIngredient & { id: string; inventoryNo: numb
     flavors: tagsFor(FLAVORS, flavorText, family),
     moods: tagsFor(MOODS, moodText, family),
     harsh,
+    rare: !!ing.rare || isLowStock(ing.gramsOnHand),
+    offer: teaOffer({
+      gramsOnHand: ing.gramsOnHand ?? null,
+      rare: !!ing.rare,
+      premium: isPremiumOrigin(ing.culturalRoots),
+    }),
   };
 }
 

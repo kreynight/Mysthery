@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
-import { getMixRules, getMixSetting, getPublicTeas, snapshotRecipe } from "@/lib/teas";
+import { getMixRules, getMixSetting, getPublicTeas, getRareIds, recipeHasRare, snapshotRecipe } from "@/lib/teas";
 import { validateMix } from "@/lib/mix";
 import { parseRecipeItems, recipeText } from "@/lib/recipe";
-import { parseSize, priceTiers, shippingFor, shippingOption, sizeLabel, type PackSize } from "@/lib/pricing";
+import { parseSize, priceTiers, shippingFor, shippingOption, sizeLabel, withRare, type PackSize } from "@/lib/pricing";
 
 /** Accepts ["id", ...] (older pages) or [{ id, parts }, ...]. Parts are 1 to 3. */
 function parseMix(mix: unknown): { id: string; parts: number }[] | null {
@@ -38,7 +38,7 @@ async function mixCheckout(req: NextRequest, mix: unknown, size: PackSize) {
     setting.packGrams,
     size
   );
-  const amount = priceTiers(setting.price, setting.price3, setting.price5)[size];
+  const amount = withRare(priceTiers(setting.price, setting.price3, setting.price5), chosen.some((t) => t.rare))[size];
   const names = chosen
     .map((t, i) => (wanted[i].parts > 1 ? `${t.name} (${wanted[i].parts} parts)` : t.name))
     .join(" + ");
@@ -86,11 +86,66 @@ async function mixCheckout(req: NextRequest, mix: unknown, size: PackSize) {
   return NextResponse.json({ url: session.url });
 }
 
+async function teaCheckout(req: NextRequest, teaId: unknown) {
+  if (typeof teaId !== "string") return NextResponse.json({ error: "Invalid tea." }, { status: 400 });
+  const teas = await getPublicTeas();
+  const tea = teas.find((t) => t.id === teaId);
+  if (!tea || !tea.offer) {
+    return NextResponse.json({ error: "That tea just sold out." }, { status: 400 });
+  }
+  const offer = tea.offer;
+  const recipe = await snapshotRecipe([{ ingredientId: tea.id, name: tea.name, parts: 1 }], offer.grams, 1);
+  const label = offer.tasting ? `${offer.grams} g tasting pouch` : "1 oz pouch";
+  const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "";
+
+  const session = await getStripe().checkout.sessions.create({
+    mode: "payment",
+    line_items: [
+      {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: `${tea.name}, ${label}`,
+            description: offer.rare ? "Rare, low-stock tea from the Mysthérie library" : "From the Mysthérie tea library",
+          },
+          unit_amount: offer.price,
+        },
+        quantity: 1,
+      },
+    ],
+    metadata: {
+      kind: "tea",
+      teaId: tea.id,
+      grams: String(offer.grams),
+      blend: recipe ? recipeText(recipe) : "",
+    },
+    shipping_address_collection: { allowed_countries: ["US"] },
+    shipping_options: [shippingOption(1)],
+    success_url: `${origin}/success`,
+    cancel_url: `${origin}/teas`,
+  });
+
+  await prisma.order.create({
+    data: {
+      dropId: null,
+      mixItems: `Single pouch: ${tea.name} (${offer.grams} g)`,
+      recipe: recipe ? (recipe as object) : undefined,
+      quantity: 1,
+      stripeSessionId: session.id,
+      totalAmount: offer.price + shippingFor(1),
+      status: "pending",
+    },
+  });
+
+  return NextResponse.json({ url: session.url });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const size = parseSize(body?.size ?? 1);
     if (!size) return NextResponse.json({ error: "Pick 1, 3 or 5 pouches." }, { status: 400 });
+    if (body && body.tea !== undefined) return await teaCheckout(req, body.tea);
     if (body && body.mix !== undefined) return await mixCheckout(req, body.mix, size);
 
     const { dropId } = body;
@@ -115,7 +170,10 @@ export async function POST(req: NextRequest) {
 
     const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "";
     const recipe = await snapshotRecipe(parseRecipeItems(drop.recipe), drop.packGrams || 28, quantity);
-    const amount = priceTiers(drop.price, drop.price3, drop.price5)[size];
+    const amount = withRare(
+      priceTiers(drop.price, drop.price3, drop.price5),
+      recipeHasRare(drop.recipe, await getRareIds())
+    )[size];
 
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",

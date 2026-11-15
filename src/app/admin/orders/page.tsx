@@ -120,7 +120,7 @@ export default function AdminOrdersPage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
                 <div>
                   <span className="text-sm font-medium text-stone-800">
-                    {order.drop ? order.drop.name : "Custom mix"}
+                    {order.drop ? order.drop.name : order.mixItems?.startsWith("Single pouch:") ? order.mixItems : "Custom mix"}
                   </span>
                   <span className="text-xs text-stone-400 ml-2">x{order.quantity}</span>
                 </div>

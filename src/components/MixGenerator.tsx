@@ -12,7 +12,7 @@ import {
   type GeneratedItem,
   type GeneratorInput,
 } from "@/lib/generator";
-import { FREE_SHIP_FROM, SHIPPING_SINGLE, priceTiers, type PackSize } from "@/lib/pricing";
+import { FREE_SHIP_FROM, RARE_BLEND_EXTRA, SHIPPING_SINGLE, priceTiers, withRare, type PackSize } from "@/lib/pricing";
 
 interface Props {
   teas: PublicTea[];
@@ -108,7 +108,8 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
   const timers = useRef<number[]>([]);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  const tiers = priceTiers(setting.price, setting.price3, setting.price5);
+  const hasRare = !!items?.some((i) => i.tea.rare);
+  const tiers = withRare(priceTiers(setting.price, setting.price3, setting.price5), hasRare);
   const input: GeneratorInput = {
     mood: feel || "any",
     flavor: taste || "any",
@@ -268,6 +269,11 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
             <p className="text-xl font-semibold text-[#5b4532] whitespace-nowrap">{formatPrice(tiers[size])}</p>
           </div>
           <p className="text-sm text-stone-600 mt-1">{mixSummary(items)} Blended by hand when you order.</p>
+          {hasRare && (
+            <p className="mt-2 inline-block rounded-full bg-[#7a5a3c] text-[#fbf6ef] text-[10px] tracking-wider uppercase px-2.5 py-1">
+              Rare tea inside · +{formatPrice(RARE_BLEND_EXTRA)} a pouch
+            </p>
+          )}
 
           <ul className="mt-4 space-y-1.5">
             {items.map(({ tea, parts }) => (
@@ -276,6 +282,11 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
                   {Math.round((parts / totalParts) * 100)}%
                 </span>
                 <span className="min-w-0 truncate text-[#2b3a28]">{tea.name}</span>
+                {tea.rare && (
+                  <span className="shrink-0 text-[9px] tracking-wider uppercase text-[#7a5a3c] border border-[#7a5a3c]/40 rounded-full px-1.5 py-0.5">
+                    Rare
+                  </span>
+                )}
               </li>
             ))}
           </ul>

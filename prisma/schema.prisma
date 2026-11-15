@@ -74,6 +74,8 @@ model InventoryIngredient {
   notes             String?
   inStock           Boolean  @default(true)
   mixFamily         String?  // override for the mix builder family; "none" hides it from mixing
+  gramsOnHand       Int?     // loose grams left; under 30 g counts as low stock
+  rare              Boolean  @default(false) // marked rare by hand; low stock teas are rare too
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
