@@ -86,9 +86,20 @@ export default async function Home() {
         <div className="flex flex-wrap items-end justify-between gap-4 mb-5 md:mb-8">
           <div>
             <p className="text-[11px] tracking-[0.3em] uppercase text-[#7a5a3c] mb-1.5">The current pour</p>
-            <h2 className="font-display text-2xl md:text-4xl font-light text-[#2b3a28]">Available batches</h2>
+            <h2 className="font-display text-2xl md:text-4xl font-light text-[#2b3a28]">Pre-made batches</h2>
             <p className="text-xs text-stone-500 mt-1.5">
               1, 3 or 5 pouches of 1 oz each. Free shipping on {FREE_SHIP_FROM} or more, {formatPrice(SHIPPING_SINGLE)} on a single.
+            </p>
+            <p className="text-xs text-stone-500 mt-1">
+              Or{" "}
+              <Link href="/mix" className="underline underline-offset-2 hover:text-[#2b3a28]">
+                make your own mix
+              </Link>{" "}
+              or buy any single tea from the{" "}
+              <Link href="/teas" className="underline underline-offset-2 hover:text-[#2b3a28]">
+                Tea Library
+              </Link>
+              .
             </p>
           </div>
           <FlowerSprig className="w-20 hidden sm:block" />
@@ -99,7 +110,7 @@ export default async function Home() {
             The batches are being restocked. Check back shortly.
           </p>
         ) : drops.length === 0 ? (
-          <p className="text-stone-500 text-sm py-16 text-center">No batches available right now. Check back soon.</p>
+          <p className="text-stone-500 text-sm py-16 text-center">No pre-made batches right now. Make your own mix or pick a single tea instead.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
             {drops.map((drop) => (
