@@ -1,6 +1,18 @@
 import Link from "next/link";
 import { DISCLAIMERS, SITE_NAME } from "@/lib/constants";
 
+// NEXT_PUBLIC_INSTAGRAM_URL may hold a full URL or just a handle ("@name" or "name").
+function instagramHref(value?: string): string | null {
+  const v = value?.trim();
+  if (!v) return null;
+  if (/^https?:\/\//i.test(v)) return v;
+  const handle = v.replace(/^@/, "");
+  if (!/^[A-Za-z0-9._]{1,30}$/.test(handle)) return null;
+  return `https://www.instagram.com/${handle}`;
+}
+
+const INSTAGRAM_HREF = instagramHref(process.env.NEXT_PUBLIC_INSTAGRAM_URL);
+
 export default function Footer() {
   return (
     <footer className="w-full border-t border-stone-200 mt-20">
@@ -27,9 +39,9 @@ export default function Footer() {
             <Link href="/faq" className="hover:text-[#3d4a3a] transition-colors">
               FAQ
             </Link>
-            {process.env.NEXT_PUBLIC_INSTAGRAM_URL && (
+            {INSTAGRAM_HREF && (
               <a
-                href={process.env.NEXT_PUBLIC_INSTAGRAM_URL}
+                href={INSTAGRAM_HREF}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-[#3d4a3a] transition-colors"
