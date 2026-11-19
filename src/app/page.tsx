@@ -1,6 +1,6 @@
 import { getMixRules, getMixSetting, getPublicTeas } from "@/lib/teas";
 import { FAMILY_ORDER, isMixable, type PublicTea } from "@/lib/mix";
-import { PHOTOS, PLANT_PHOTOS, teaPhoto } from "@/lib/photos";
+import { PHOTOS, teaPhoto } from "@/lib/photos";
 import { FREE_SHIP_FROM, SHIPPING_SINGLE, TEA_PRICE } from "@/lib/pricing";
 import { formatPrice } from "@/lib/format";
 import HeroSlides, { type Slide } from "@/components/shop/HeroSlides";
@@ -23,15 +23,14 @@ const SLIDES: Slide[] = [
     tint: "#1e2a1c",
   },
   {
-    image: PLANT_PHOTOS.kowosol,
-    alt: "Soursop fruit and leaves on the tree",
-    eyebrow: "Haitian bush teas",
-    title: "Kowosòl, Chadèk, Melis.",
-    body: "Leaves Haitian families have steeped for generations, sold by their Creole names.",
-    cta: "Shop Haitian teas",
-    href: "#shop",
-    origin: "Haiti",
-    tint: "#2a2416",
+    image: PHOTOS.origins,
+    alt: "Rows of tea bushes on a green hillside",
+    eyebrow: "Shop by origin",
+    title: "From Yunnan to Kyoto to Port-au-Prince.",
+    body: "Pu-erh, gyokuro, Earl Grey and Creole bush teas, sold by the pouch.",
+    cta: "Where it grows",
+    href: "#origins",
+    tint: "#1e2a1c",
   },
   {
     image: PHOTOS.library,
@@ -46,9 +45,28 @@ const SLIDES: Slide[] = [
   },
 ];
 
-function sortTeas(a: PublicTea, b: PublicTea) {
-  const h = (t: PublicTea) => (t.country === "Haiti" ? 0 : 1);
-  return h(a) - h(b) || FAMILY_ORDER.indexOf(a.family) - FAMILY_ORDER.indexOf(b.family) || a.name.localeCompare(b.name);
+/** Mixes the shelf so the first rows show a spread of styles and origins, not one country or family. */
+function interleave(teas: PublicTea[]): PublicTea[] {
+  const groups = new Map<string, PublicTea[]>();
+  for (const t of [...teas].sort((a, b) => a.name.localeCompare(b.name))) {
+    const g = groups.get(t.family) || [];
+    g.push(t);
+    groups.set(t.family, g);
+  }
+  // Within each family, alternate countries so no one origin bunches up.
+  const spread = [...groups.values()].map((g) => {
+    const byCountry = new Map<string, PublicTea[]>();
+    for (const t of g) byCountry.set(t.country || "", [...(byCountry.get(t.country || "") || []), t]);
+    const lanes = [...byCountry.values()];
+    const out: PublicTea[] = [];
+    for (let i = 0; out.length < g.length; i++) for (const l of lanes) if (l[i]) out.push(l[i]);
+    return out;
+  });
+  const order = FAMILY_ORDER.filter((f) => groups.has(f));
+  const lanes = [...order.map((f) => spread[[...groups.keys()].indexOf(f)]), ...[...groups.keys()].filter((f) => !order.includes(f)).map((f) => spread[[...groups.keys()].indexOf(f)])];
+  const out: PublicTea[] = [];
+  for (let i = 0; out.length < teas.length; i++) for (const l of lanes) if (l[i]) out.push(l[i]);
+  return out;
 }
 
 export default async function Home() {
@@ -60,19 +78,16 @@ export default async function Home() {
     teas = [];
   }
   const mixable = teas.filter((t) => isMixable(t, rules));
-  const forSale: ShopTea[] = teas
-    .filter((t) => t.offer)
-    .sort(sortTeas)
-    .map((t) => ({ ...t, photo: teaPhoto(t) }));
-  const origins = FLAG_COUNTRIES.map((country) => ({ country, count: forSale.filter((t) => t.country === country).length })).filter(
-    (o) => o.count > 0
+  const forSale: ShopTea[] = interleave(teas.filter((t) => t.offer)).map((t) => ({ ...t, photo: teaPhoto(t) }));
+  const origins = FLAG_COUNTRIES.filter((c) => forSale.some((t) => t.country === c)).sort((a, b) =>
+    (a === "UK" ? "England" : a).localeCompare(b === "UK" ? "England" : b)
   );
 
   return (
     <div>
       <HeroSlides slides={SLIDES} />
 
-      {forSale.length > 0 && <OriginRow origins={origins} total={forSale.length} />}
+      {forSale.length > 0 && <OriginRow origins={origins} />}
 
       <section id="mix" className="scroll-mt-20 mt-12 md:mt-20 bg-[#e4e9da]">
         <div className="max-w-6xl mx-auto px-5 py-12 md:py-16">

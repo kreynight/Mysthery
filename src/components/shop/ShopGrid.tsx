@@ -31,7 +31,7 @@ function Card({ tea, priority }: { tea: ShopTea; priority: boolean }) {
       <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-[#dfe6d3]">
         <Image
           src={tea.photo.src}
-          alt={tea.photo.own ? `${tea.name} plant` : ""}
+          alt={tea.photo.own ? tea.name : ""}
           fill
           priority={priority}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
@@ -135,7 +135,7 @@ export default function ShopGrid({ teas }: { teas: ShopTea[] }) {
             onClick={() => setShowAll(true)}
             className="rounded-full border border-[#2b3a28] text-[#2b3a28] px-8 py-3.5 text-xs tracking-[0.2em] uppercase hover:bg-[#2b3a28] hover:text-[#f5f7ef] transition-colors"
           >
-            View all {list.length} teas
+            View all teas
           </button>
         </div>
       )}

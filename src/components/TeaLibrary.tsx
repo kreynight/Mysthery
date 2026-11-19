@@ -215,7 +215,6 @@ function TeaCard({ tea }: { tea: PublicTea }) {
         <p className="mt-1.5 flex flex-wrap gap-1">
           {tea.country && <Badge tone="outline">{tea.country}</Badge>}
           {!offer && <Badge tone="muted">Sold out</Badge>}
-          {offer?.lowStock && <Badge tone="warm">Low stock</Badge>}
           {offer?.rare && <Badge tone="warm">Rare</Badge>}
         </p>
       </div>

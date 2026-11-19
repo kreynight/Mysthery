@@ -1,5 +1,5 @@
 export const SITE_NAME = "Mysthérie";
-export const SITE_TAGLINE = "Mystery tea collections. Limited batches. Curated blends.";
+export const SITE_TAGLINE = "Teas from around the world, by the pouch or blended by hand.";
 
 export const DISCLAIMERS = [
   "Ingredients may vary by batch. Mystery items are curated from a rotating library of herbs, teas, and spices.",

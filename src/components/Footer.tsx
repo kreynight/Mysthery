@@ -19,7 +19,7 @@ export default function Footer() {
               Tea Atelier
             </p>
             <p className="text-xs text-[#d3dec6] max-w-xs">
-              Mystery tea collections. Limited batches.
+              Teas from around the world, by the pouch or blended by hand.
             </p>
           </div>
           <nav aria-label="Footer" className="flex flex-wrap gap-6 text-xs tracking-wide uppercase text-[#d3dec6]">

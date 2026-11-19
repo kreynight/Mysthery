@@ -12,6 +12,8 @@ export const PHOTOS = {
   mix: pexels(28448494),
   // pexels.com/photo/assorted-herbal-teas-and-spices-in-wooden-spoons-28513379/
   library: pexels(28513379),
+  // Tea bushes on Yunnan hillsides, for the "Shop by origin" slide.
+  origins: pexels(39218218, 1800),
 };
 
 export const PLANT_PHOTOS = {
@@ -51,6 +53,76 @@ const FAMILY_PHOTOS: Record<string, string[]> = {
   addin: [pexels(9415609, 800)],
 };
 
+// One Pexels photo per tea, by inventory number, chosen to show that tea or its main ingredient.
+// Haitian bush teas with a plant photo of their own are matched by name below and aren't listed here.
+const BY_INVENTORY: Record<number, number> = {
+  2: 25436294,
+  3: 10287889,
+  4: 37832983,
+  5: 14381803,
+  6: 28836251,
+  9: 32931375,
+  12: 40425509,
+  13: 11151812,
+  14: 5389613,
+  15: 8330047,
+  16: 10487658,
+  17: 6998567,
+  18: 16724967,
+  19: 33781552,
+  20: 103875,
+  21: 20535021,
+  22: 34788195,
+  23: 33843869,
+  24: 37153750,
+  25: 35151735,
+  26: 30634048,
+  27: 10775154,
+  28: 27917041,
+  29: 10348767,
+  30: 19533203,
+  31: 36471946,
+  32: 4499223,
+  33: 4050243,
+  34: 787673,
+  35: 30210309,
+  37: 37091865,
+  40: 32911366,
+  43: 12477657,
+  44: 7932743,
+  46: 13383488,
+  47: 20258244,
+  48: 30216055,
+  49: 12717629,
+  50: 8329252,
+  51: 4960059,
+  52: 33781411,
+  53: 6226209,
+  54: 8952044,
+  55: 189386,
+  56: 37395078,
+  57: 3123912,
+  58: 38177945,
+  59: 38541130,
+  60: 6990075,
+  61: 32087723,
+  62: 32087738,
+  63: 30216025,
+  64: 32087719,
+  65: 32087716,
+  66: 31959376,
+  67: 31956362,
+  68: 31756541,
+  69: 31756539,
+  70: 3872132,
+  71: 6569021,
+  72: 13926598,
+  73: 6087684,
+  74: 31986686,
+  75: 35042576,
+  76: 37463188,
+};
+
 // Haitian bush teas with a photo of their own plant.
 const OWN_PHOTOS: [RegExp, string][] = [
   [/chad[eè]k/i, PLANT_PHOTOS.chadek],
@@ -69,7 +141,7 @@ function hash(s: string): number {
 
 export interface TeaPhoto {
   src: string;
-  /** True when the photo is of this tea's own plant, false for a stand-in by family. */
+  /** True when the photo was picked for this tea, false for a stand-in by family. */
   own: boolean;
   /** CSS object-position, varied a little so stand-ins don't look identical side by side. */
   position: string;
@@ -77,8 +149,10 @@ export interface TeaPhoto {
 
 const POSITIONS = ["50% 50%", "30% 40%", "70% 60%", "40% 70%", "60% 30%"];
 
-export function teaPhoto(tea: { id: string; name: string; family: string }): TeaPhoto {
+export function teaPhoto(tea: { id: string; name: string; family: string; inventoryNo?: number | null }): TeaPhoto {
   for (const [re, src] of OWN_PHOTOS) if (re.test(tea.name)) return { src, own: true, position: "50% 50%" };
+  const own = tea.inventoryNo != null ? BY_INVENTORY[tea.inventoryNo] : undefined;
+  if (own) return { src: pexels(own, 800), own: true, position: "50% 50%" };
   const list = FAMILY_PHOTOS[tea.family] || FAMILY_PHOTOS.herbal;
   const h = hash(tea.id);
   return { src: list[h % list.length], own: false, position: POSITIONS[h % POSITIONS.length] };

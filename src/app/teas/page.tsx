@@ -41,7 +41,7 @@ export default async function TeaLibraryPage() {
       </section>
 
       <p className="text-xs text-stone-500 mb-2">
-        Single pouches from {formatPrice(TEA_PRICE)}. Rare, low-stock teas come as small tasting pouches.{" "}
+        Single pouches from {formatPrice(TEA_PRICE)}. Rare teas come as small tasting pouches.{" "}
         {formatPrice(SHIPPING_SINGLE)} shipping.
       </p>
 
