@@ -1,30 +1,8 @@
 import Link from "next/link";
 import { DISCLAIMERS, SITE_NAME } from "@/lib/constants";
 import { LeafSprig, FlowerSprig } from "@/components/Botanicals";
-
-// NEXT_PUBLIC_INSTAGRAM_URL may hold a full URL or just a handle ("@name" or "name").
-function instagramHref(value?: string): string | null {
-  const v = value?.trim();
-  if (!v) return null;
-  if (/^https?:\/\//i.test(v)) return v;
-  const handle = v.replace(/^@/, "");
-  if (!/^[A-Za-z0-9._]{1,30}$/.test(handle)) return null;
-  return `https://www.instagram.com/${handle}`;
-}
-
-const INSTAGRAM_HREF = instagramHref(process.env.NEXT_PUBLIC_INSTAGRAM_URL);
-
-// NEXT_PUBLIC_TIKTOK_URL may hold a full URL or just a handle ("@name" or "name").
-function tiktokHref(value?: string): string | null {
-  const v = value?.trim();
-  if (!v) return null;
-  if (/^https?:\/\//i.test(v)) return v;
-  const handle = v.replace(/^@/, "");
-  if (!/^[A-Za-z0-9._]{2,24}$/.test(handle)) return null;
-  return `https://www.tiktok.com/@${handle}`;
-}
-
-const TIKTOK_HREF = tiktokHref(process.env.NEXT_PUBLIC_TIKTOK_URL);
+import { INSTAGRAM_HREF, TIKTOK_HREF } from "@/lib/social";
+import { PHOTO_CREDIT } from "@/lib/photos";
 
 export default function Footer() {
   return (
@@ -89,7 +67,7 @@ export default function Footer() {
             </p>
           ))}
           <p className="text-[11px] text-[#c3cfb6] pt-2">
-            &copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved. Photography from Pexels.
+            &copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved. {PHOTO_CREDIT}
           </p>
         </div>
       </div>

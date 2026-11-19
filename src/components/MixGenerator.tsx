@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatPrice } from "@/lib/format";
 import SizePicker from "@/components/SizePicker";
+import { addMix } from "@/lib/cart";
 import type { MixSettingLike, PublicTea, RuleLike } from "@/lib/mix";
 import {
   generateMix,
@@ -104,8 +105,6 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
   const [revealed, setRevealed] = useState(false);
   const [noMatch, setNoMatch] = useState(false);
   const [size, setSize] = useState<PackSize>(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const timers = useRef<number[]>([]);
   const resultRef = useRef<HTMLDivElement>(null);
 
@@ -131,7 +130,6 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
     if (isSpinning) return;
     timers.current.forEach((t) => window.clearTimeout(t));
     timers.current = [];
-    setError(null);
     const mix = generateMix(teas, rules, setting, input);
     if (!mix) {
       setNoMatch(true);
@@ -173,24 +171,18 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSpinning, teas, rules, setting, taste, feel, caffeine]);
 
-  const buy = async () => {
+  const [added, setAdded] = useState(false);
+  const addToCart = () => {
     if (!items) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mix: items.map((i) => ({ id: i.tea.id, parts: i.parts })), size }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else setError(data.error || "Something went wrong.");
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    addMix({
+      name: mixName(items, input),
+      items: items.map((i) => ({ id: i.tea.id, parts: i.parts })),
+      teas: items.map((i) => reelWord(i.tea)),
+      size,
+      price: tiers[size],
+    });
+    setAdded(true);
+    window.setTimeout(() => setAdded(false), 1600);
   };
 
   const finals = [0, 1, 2].map((i) => (items && items[i] ? reelWord(items[i].tea) : i === 2 && items ? "Pure" : "?"));
@@ -306,16 +298,14 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
           </div>
           <button
             type="button"
-            onClick={buy}
-            disabled={loading}
-            className="mt-3 w-full py-4 rounded-full bg-[#3d4a3a] text-[#f5f7ef] text-sm tracking-widest uppercase hover:bg-[#2b3a28] transition-colors disabled:opacity-70"
+            onClick={addToCart}
+            className="mt-3 w-full py-4 rounded-full bg-[#3d4a3a] text-[#f5f7ef] text-sm tracking-widest uppercase hover:bg-[#2b3a28] transition-colors"
           >
-            {loading ? "Processing..." : `Buy this blend · ${formatPrice(tiers[size])}`}
+            {added ? "Added to cart ✓" : `Add to cart · ${formatPrice(tiers[size])}`}
           </button>
           <p className="text-xs text-stone-500 text-center mt-2">
             {size >= FREE_SHIP_FROM ? "Free shipping" : `${formatPrice(SHIPPING_SINGLE)} shipping. Free on ${FREE_SHIP_FROM} or more.`}
           </p>
-          {error && <p className="text-sm text-[#8b3a2b] text-center mt-2">{error}</p>}
         </div>
       )}
     </div>

@@ -1,191 +1,114 @@
-import Image from "next/image";
-import Link from "next/link";
-import { prisma } from "@/lib/prisma";
-import ProductCard from "@/components/ProductCard";
-import { LeafSprig, FlowerSprig, VineDivider } from "@/components/Botanicals";
-import { PHOTOS } from "@/lib/photos";
-import { batchCaffeine } from "@/lib/recipe";
-import { FREE_SHIP_FROM, SHIPPING_SINGLE, priceTiers, withRare } from "@/lib/pricing";
-import { batchPouchesLeft, getRareIds, getStockMap, recipeHasRare } from "@/lib/teas";
+import { getMixRules, getMixSetting, getPublicTeas } from "@/lib/teas";
+import { FAMILY_ORDER, isMixable, type PublicTea } from "@/lib/mix";
+import { PHOTOS, PLANT_PHOTOS, teaPhoto } from "@/lib/photos";
+import { FREE_SHIP_FROM, SHIPPING_SINGLE, TEA_PRICE } from "@/lib/pricing";
 import { formatPrice } from "@/lib/format";
+import HeroSlides, { type Slide } from "@/components/shop/HeroSlides";
+import OriginRow from "@/components/shop/OriginRow";
+import ShopGrid, { type ShopTea } from "@/components/shop/ShopGrid";
+import { FLAG_COUNTRIES } from "@/components/shop/Flag";
+import MixGenerator from "@/components/MixGenerator";
 
 export const dynamic = "force-dynamic";
 
-function extractBatchNo(dropNotes: string | null): string | null {
-  if (!dropNotes) return null;
-  const match = dropNotes.match(/Batch\s*#?(\d+)/i);
-  return match ? match[1] : null;
+const SLIDES: Slide[] = [
+  {
+    image: PHOTOS.hero,
+    alt: "A glass cup of tea surrounded by loose leaves and herbs",
+    eyebrow: "The blend machine",
+    title: "Pick a mood. We pick the tea.",
+    body: "Tap what you like, pull the lever, and we blend something one of a kind from our shelf.",
+    cta: "Pull the lever",
+    href: "#mix",
+    tint: "#1e2a1c",
+  },
+  {
+    image: PLANT_PHOTOS.kowosol,
+    alt: "Soursop fruit and leaves on the tree",
+    eyebrow: "Haitian bush teas",
+    title: "Kowosòl, Chadèk, Melis.",
+    body: "Leaves Haitian families have steeped for generations, sold by their Creole names.",
+    cta: "Shop Haitian teas",
+    href: "#shop",
+    origin: "Haiti",
+    tint: "#2a2416",
+  },
+  {
+    image: PHOTOS.library,
+    alt: "Assorted herbal teas and spices on wooden spoons",
+    eyebrow: "Single pouches",
+    title: "Every tea on our shelf.",
+    body: `From ${formatPrice(TEA_PRICE).replace(".00", "")} a pouch. Free shipping on ${FREE_SHIP_FROM} or more.`,
+    cta: "Shop teas",
+    href: "#shop",
+    origin: null,
+    tint: "#1e2a1c",
+  },
+];
+
+function sortTeas(a: PublicTea, b: PublicTea) {
+  const h = (t: PublicTea) => (t.country === "Haiti" ? 0 : 1);
+  return h(a) - h(b) || FAMILY_ORDER.indexOf(a.family) - FAMILY_ORDER.indexOf(b.family) || a.name.localeCompare(b.name);
 }
 
 export default async function Home() {
-  let drops: Awaited<ReturnType<typeof prisma.drop.findMany>> = [];
-  let dbError = false;
-  let rareIds = new Set<string>();
-  let stock = new Map<string, number | null>();
-
+  let teas: PublicTea[] = [];
+  const [rules, setting] = await Promise.all([getMixRules(), getMixSetting()]);
   try {
-    [drops, rareIds, stock] = await Promise.all([
-      prisma.drop.findMany({ where: { isActive: true }, orderBy: { createdAt: "asc" } }),
-      getRareIds(),
-      getStockMap(),
-    ]);
+    teas = await getPublicTeas();
   } catch {
-    dbError = true;
+    teas = [];
   }
+  const mixable = teas.filter((t) => isMixable(t, rules));
+  const forSale: ShopTea[] = teas
+    .filter((t) => t.offer)
+    .sort(sortTeas)
+    .map((t) => ({ ...t, photo: teaPhoto(t) }));
+  const origins = FLAG_COUNTRIES.map((country) => ({ country, count: forSale.filter((t) => t.country === country).length })).filter(
+    (o) => o.count > 0
+  );
 
   return (
     <div>
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 pt-8 md:pt-12">
-          <div className="relative rounded-3xl overflow-hidden bg-[#2b3a28] min-h-[380px] md:min-h-[540px] flex items-end">
-            <Image
-              src={PHOTOS.hero}
-              alt="A glass cup of tea surrounded by loose leaves and herbs"
-              fill
-              priority
-              className="object-cover opacity-80"
-              sizes="(max-width: 1200px) 100vw, 1150px"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#1e2a1c]/90 via-[#1e2a1c]/40 to-transparent" />
-            <LeafSprig className="absolute right-6 top-6 w-24 md:w-32 opacity-70" color="#d3dec6" />
-            <div className="relative p-6 md:p-12 max-w-xl">
-              <p className="text-[11px] tracking-[0.3em] uppercase text-[#d9c3a5] mb-3">
-                Limited batches, now pouring
-              </p>
-              <h1 className="font-display text-4xl md:text-6xl font-light leading-[1.05] text-[#f5f7ef] mb-4">
-                Pick a mood.<br />We pick the tea.
-              </h1>
-              <p className="text-sm md:text-base text-[#e3eadb] leading-relaxed mb-7 max-w-md">
-                Mystery blends poured in tiny, numbered batches. Each one is new, so you taste it
-                before you know what&apos;s inside.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <a
-                  href="#batches"
-                  className="inline-block rounded-full bg-[#f5f7ef] text-[#2b3a28] px-7 py-3.5 text-xs tracking-widest uppercase font-semibold hover:bg-white transition-colors"
-                >
-                  Shop the batches
-                </a>
-                <Link
-                  href="/mix"
-                  className="inline-block rounded-full border border-[#f5f7ef]/70 text-[#f5f7ef] px-7 py-3.5 text-xs tracking-widest uppercase font-semibold hover:bg-[#f5f7ef]/10 transition-colors"
-                >
-                  Make your own mix
-                </Link>
-              </div>
-            </div>
+      <HeroSlides slides={SLIDES} />
+
+      {forSale.length > 0 && <OriginRow origins={origins} />}
+
+      <section id="mix" className="scroll-mt-20 mt-12 md:mt-20 bg-[#e4e9da]">
+        <div className="max-w-6xl mx-auto px-5 py-12 md:py-16">
+          <div className="text-center mb-7">
+            <p className="text-[11px] tracking-[0.3em] uppercase text-[#7a5a3c] mb-1">Make your own mix</p>
+            <h2 className="font-display text-3xl md:text-5xl text-[#2b3a28]">Pull the lever</h2>
+            <p className="text-sm text-stone-600 mt-2 max-w-md mx-auto">
+              A one-of-a-kind blend from what&apos;s on our shelf, mixed by hand when you order. Don&apos;t love it? Pull again.
+            </p>
           </div>
+          {!setting.isEnabled ? (
+            <p className="text-sm text-stone-500 text-center py-10">Custom mixes are paused right now. Check back soon.</p>
+          ) : mixable.length < 2 ? (
+            <p className="text-sm text-stone-500 text-center py-10">The shelf is being restocked. Check back soon.</p>
+          ) : (
+            <MixGenerator teas={mixable} rules={rules} setting={setting} />
+          )}
         </div>
       </section>
 
-      {/* Batches */}
-      <section id="batches" className="max-w-6xl mx-auto px-4 pt-10 md:pt-16 scroll-mt-6">
-        <div className="flex flex-wrap items-end justify-between gap-4 mb-5 md:mb-8">
-          <div>
-            <p className="text-[11px] tracking-[0.3em] uppercase text-[#7a5a3c] mb-1.5">The current pour</p>
-            <h2 className="font-display text-2xl md:text-4xl font-light text-[#2b3a28]">Pre-made batches</h2>
-            <p className="text-xs text-stone-500 mt-1.5">
-              1, 3 or 5 pouches of 1 oz each. Free shipping on {FREE_SHIP_FROM} or more, {formatPrice(SHIPPING_SINGLE)} on a single.
-            </p>
-            <p className="text-xs text-stone-500 mt-1">
-              Or{" "}
-              <Link href="/mix" className="underline underline-offset-2 hover:text-[#2b3a28]">
-                make your own mix
-              </Link>{" "}
-              or buy any single tea from the{" "}
-              <Link href="/teas" className="underline underline-offset-2 hover:text-[#2b3a28]">
-                Tea Library
-              </Link>
-              .
-            </p>
-          </div>
-          <FlowerSprig className="w-20 hidden sm:block" />
-        </div>
+      {forSale.length === 0 ? (
+        <p className="text-sm text-stone-500 text-center py-16">The shelf is being restocked. Check back soon.</p>
+      ) : (
+        <ShopGrid teas={forSale} />
+      )}
 
-        {dbError ? (
-          <p className="text-stone-500 text-sm py-16 text-center">
-            The batches are being restocked. Check back shortly.
-          </p>
-        ) : drops.length === 0 ? (
-          <p className="text-stone-500 text-sm py-16 text-center">No pre-made batches right now. Make your own mix or pick a single tea instead.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
-            {drops.map((drop) => (
-              <ProductCard
-                key={drop.id}
-                slug={drop.slug}
-                name={drop.name}
-                tiers={withRare(priceTiers(drop.price, drop.price3, drop.price5), recipeHasRare(drop.recipe, rareIds))}
-                rare={recipeHasRare(drop.recipe, rareIds)}
-                remaining={batchPouchesLeft(drop, stock)}
-                total={drop.batchQuantityTotal}
-                vibeLine={drop.vibeLine}
-                image={drop.images[0]}
-                batchNo={extractBatchNo(drop.dropNotes)}
-                mood={drop.mood || drop.effectType}
-                caffeine={batchCaffeine(drop.caffeine)}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <VineDivider className="max-w-6xl mx-auto px-4 my-12 md:my-20" />
-
-      {/* Make a mix + tea library */}
-      <section className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-        <Link href="/mix" className="group relative rounded-3xl overflow-hidden min-h-[240px] md:min-h-[340px] flex items-end bg-[#5b4532]">
-          <Image
-            src={PHOTOS.mix}
-            alt="Loose teas and dried herbs on wooden spoons"
-            fill
-            className="object-cover opacity-85 group-hover:scale-105 transition-transform duration-700"
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#2a1f15]/90 via-[#2a1f15]/30 to-transparent" />
-          <div className="relative p-6 md:p-8">
-            <p className="text-[11px] tracking-[0.3em] uppercase text-[#e5cfae] mb-2">Mix generator</p>
-            <h3 className="font-display text-3xl font-light text-[#fbf6ef] mb-2">Make a mix</h3>
-            <p className="text-sm text-[#efe6da] max-w-sm">
-              Tap what you like, pull the lever, and get a one-of-a-kind blend made to order.
-            </p>
-          </div>
-        </Link>
-        <Link href="/teas" className="group relative rounded-3xl overflow-hidden min-h-[240px] md:min-h-[340px] flex items-end bg-[#3d4a3a]">
-          <Image
-            src={PHOTOS.library}
-            alt="Assorted herbal teas and spices"
-            fill
-            className="object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1e2a1c]/90 via-[#1e2a1c]/30 to-transparent" />
-          <div className="relative p-6 md:p-8">
-            <p className="text-[11px] tracking-[0.3em] uppercase text-[#d3dec6] mb-2">
-              Teas and botanicals
-            </p>
-            <h3 className="font-display text-3xl font-light text-[#f5f7ef] mb-2">The tea library</h3>
-            <p className="text-sm text-[#e3eadb] max-w-sm">
-              Everything on our shelf right now: black, green, pu-erh, mate, herbal and Haitian bush teas.
-            </p>
-          </div>
-        </Link>
-      </section>
-
-      {/* How it works */}
-      <section className="max-w-6xl mx-auto px-4 mt-12 md:mt-20">
-        <div className="relative rounded-3xl bg-[#e1e9d6] px-6 py-8 md:px-8 md:py-10 grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8 overflow-hidden">
-          <LeafSprig className="absolute -right-4 -bottom-10 w-32 opacity-50" />
+      <section className="max-w-6xl mx-auto px-5 mt-16 md:mt-24">
+        <div className="rounded-3xl bg-[#2b3a28] text-[#eef2e6] px-6 py-8 md:px-10 md:py-10 grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[
-            ["01", "Pick a mood", "Calming, energizing or balancing."],
-            ["02", "We blend in small batches", "Teas from Yunnan and beyond, never the same twice."],
-            ["03", "Unbox the mystery", "Steep it, sip it, and guess what's inside."],
-          ].map(([n, t, d]) => (
-            <div key={n} className="relative">
-              <p className="text-xs font-semibold text-[#7a5a3c] mb-1">{n}</p>
-              <p className="font-display text-xl text-[#2b3a28] mb-1">{t}</p>
-              <p className="text-sm text-stone-500 leading-relaxed">{d}</p>
+            ["Hand-blended", "Every pouch is weighed and sealed by hand when you order."],
+            ["Shipping", `${formatPrice(SHIPPING_SINGLE)} on one pouch, free on ${FREE_SHIP_FROM} or more. US only for now.`],
+            ["The library", "Want the full shelf with notes and caffeine levels? It's in the menu under Tea Library."],
+          ].map(([t, d]) => (
+            <div key={t}>
+              <p className="font-display text-xl text-[#e9dcc6] mb-1">{t}</p>
+              <p className="text-sm text-[#cfd9c3] leading-relaxed">{d}</p>
             </div>
           ))}
         </div>

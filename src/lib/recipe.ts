@@ -20,6 +20,8 @@ export interface OrderRecipe {
   packGrams: number;
   pouches: number;
   lines: RecipeLine[];
+  /** A cart order: what to pack, item by item. `lines` then holds the total grams of each tea for the whole order. */
+  parts?: { label: string; recipe: OrderRecipe }[];
 }
 
 const roundHalf = (n: number) => Math.round(n * 2) / 2;

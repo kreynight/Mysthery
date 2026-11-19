@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import TeaBuyButton from "@/components/TeaBuyButton";
+import { teaPhoto } from "@/lib/photos";
 import { FAMILIES, FAMILY_ORDER, FAMILY_TINT, type PublicTea } from "@/lib/mix";
 
 type Sort = "type" | "price-low" | "price-high" | "name";
@@ -219,7 +220,13 @@ function TeaCard({ tea }: { tea: PublicTea }) {
         </p>
       </div>
       {offer && (
-        <TeaBuyButton teaId={tea.id} price={offer.price} label={offer.tasting ? `${offer.grams} g tasting` : "1 oz pouch"} />
+        <TeaBuyButton
+          teaId={tea.id}
+          name={tea.name}
+          price={offer.price}
+          label={offer.tasting ? `${offer.grams} g tasting` : "1 oz pouch"}
+          image={teaPhoto(tea).src}
+        />
       )}
     </li>
   );

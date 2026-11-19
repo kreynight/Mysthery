@@ -27,8 +27,18 @@ const SOURCE_NOTE: Record<Order["blendSource"], string> = {
   none: "",
 };
 
-function BlendCard({ order }: { order: Order }) {
+function BlendCard({ order, title }: { order: Order; title?: string }) {
   const b = order.blend;
+  if (b?.parts?.length) {
+    return (
+      <div className="mt-3 space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[#2b3a28]">Cart order: pack each item</p>
+        {b.parts.map((p, i) => (
+          <BlendCard key={i} order={{ ...order, blend: p.recipe, blendSource: "order" }} title={p.label} />
+        ))}
+      </div>
+    );
+  }
   if (!b) {
     return (
       <p className="mt-3 text-xs text-orange-700 bg-orange-50 px-3 py-2">
@@ -38,6 +48,7 @@ function BlendCard({ order }: { order: Order }) {
   }
   return (
     <div className="mt-3 bg-[#eef2e8] px-4 py-3">
+      {title && <p className="text-sm font-medium text-[#2b3a28] mb-1">{title}</p>}
       <p className="text-xs font-semibold uppercase tracking-wide text-[#2b3a28] mb-2">
         Blend {b.pouches > 1 ? `each of ${b.pouches} pouches` : "1 pouch"} ({b.packGrams} g)
       </p>
@@ -121,7 +132,7 @@ export default function AdminOrdersPage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
                 <div>
                   <span className="text-sm font-medium text-stone-800">
-                    {order.drop ? order.drop.name : order.mixItems?.startsWith("Single pouch:") ? order.mixItems : "Custom mix"}
+                    {order.drop ? order.drop.name : order.mixItems?.startsWith("Single pouch:") ? order.mixItems : order.mixItems?.startsWith("Cart:") ? "Cart order" : "Custom mix"}
                   </span>
                   <span className="text-xs text-stone-400 ml-2">x{order.quantity}</span>
                 </div>
