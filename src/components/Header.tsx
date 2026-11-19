@@ -92,7 +92,7 @@ export default function Header({ instagram, tiktok }: { instagram?: string | nul
       </header>
 
       {/* Menu drawer */}
-      <div className={`fixed inset-0 z-50 ${menu ? "" : "pointer-events-none"}`} aria-hidden={!menu}>
+      <div className={`fixed inset-0 z-50 overflow-hidden transition-[visibility] duration-300 ${menu ? "" : "pointer-events-none invisible"}`} aria-hidden={!menu}>
         <div
           onClick={() => setMenu(false)}
           className={`absolute inset-0 bg-[#1e2a1c]/40 transition-opacity duration-300 ${menu ? "opacity-100" : "opacity-0"}`}

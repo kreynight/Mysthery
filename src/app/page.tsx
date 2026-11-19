@@ -72,7 +72,7 @@ export default async function Home() {
     <div>
       <HeroSlides slides={SLIDES} />
 
-      {forSale.length > 0 && <OriginRow origins={origins} />}
+      {forSale.length > 0 && <OriginRow origins={origins} total={forSale.length} />}
 
       <section id="mix" className="scroll-mt-20 mt-12 md:mt-20 bg-[#e4e9da]">
         <div className="max-w-6xl mx-auto px-5 py-12 md:py-16">

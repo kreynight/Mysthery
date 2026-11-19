@@ -5,13 +5,13 @@ import { setOrigin, useCart } from "@/lib/cart";
 
 const LABEL: Record<string, string> = { UK: "England", USA: "USA" };
 
-export default function OriginRow({ origins }: { origins: { country: string; count: number }[] }) {
+export default function OriginRow({ origins, total }: { origins: { country: string; count: number }[]; total: number }) {
   const { origin } = useCart();
   const pick = (c: string | null) => {
     setOrigin(c);
     document.getElementById("shop")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
-  const all = [{ country: null as string | null, count: origins.reduce((s, o) => s + o.count, 0) }, ...origins];
+  const all = [{ country: null as string | null, count: total }, ...origins];
 
   return (
     <section id="origins" className="max-w-6xl mx-auto pt-10 md:pt-14 scroll-mt-20">

@@ -98,7 +98,7 @@ export default function CartDrawer() {
   };
 
   return (
-    <div className={`fixed inset-0 z-50 ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
+    <div className={`fixed inset-0 z-50 overflow-hidden transition-[visibility] duration-300 ${open ? "" : "pointer-events-none invisible"}`} aria-hidden={!open}>
       <div
         onClick={() => openCart(false)}
         className={`absolute inset-0 bg-[#1e2a1c]/40 transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`}
