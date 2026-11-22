@@ -69,7 +69,9 @@ export interface ShippoOrderInput {
 const dollars = (cents: number) => (cents / 100).toFixed(2);
 
 export function shippoOrderBody(o: ShippoOrderInput) {
-  const lineGrams = o.lines.length ? Math.max(1, Math.round(o.grams / o.lines.length)) : o.grams;
+  // Shippo weighs each unit of a line; spread the parcel weight over every unit.
+  const units = o.lines.reduce((n, l) => n + l.quantity, 0);
+  const lineGrams = units ? Math.max(1, Math.round(o.grams / units)) : o.grams;
   return {
     order_number: o.orderNumber,
     order_status: "PAID",
