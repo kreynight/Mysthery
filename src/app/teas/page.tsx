@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: `Tea Library | ${SITE_NAME}`,
-  description: "Every tea and botanical on the Mysthérie shelf right now, from black and pu-erh to Haitian bush teas.",
+  description: "Every tea and botanical on the Mysthérie shelf right now, from black and pu-erh to green, white and herbal.",
 };
 
 export default async function TeaLibraryPage() {

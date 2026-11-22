@@ -12,7 +12,7 @@ const body = Familjen_Grotesk({ subsets: ["latin", "latin-ext"], variable: "--fo
 
 export const metadata: Metadata = {
   title: `${SITE_NAME} | Tea Atelier`,
-  description: "Single-origin teas and Haitian bush teas by the pouch, or pull the lever for a one-of-a-kind blend.",
+  description: "Teas from around the world by the pouch, or pull the lever for a one-of-a-kind blend.",
 };
 
 export default function RootLayout({
