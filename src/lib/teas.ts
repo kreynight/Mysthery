@@ -80,6 +80,7 @@ export async function snapshotRecipe(
         name: row?.name || i.name,
         brand: row?.brand || null,
         parts: i.parts,
+        accent: i.accent,
       };
     }),
     packGrams,

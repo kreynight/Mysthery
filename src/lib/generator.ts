@@ -89,13 +89,20 @@ function weightedPick<T>(items: { item: T; score: number }[], random: () => numb
 
 function fits(tea: PublicTea, chosen: PublicTea[], rules: RuleLike[]): boolean {
   const n = baseName(tea.name);
+  // A mix holds at most one mix-only (last few grams) tea.
+  if (tea.mixOnly && chosen.some((c) => c.mixOnly)) return false;
   return chosen.every((c) => c.id !== tea.id && baseName(c.name) !== n && !blockingRule(tea, c, rules));
 }
 
 /** How many pouches of this blend the shelf can fill right now. */
 export function mixPouchesInStock(items: GeneratedItem[], packGrams: number): number {
-  const grams = gramsPerPouch(items.map((i) => ({ parts: i.parts })), packGrams);
+  const grams = gramsPerPouch(items.map((i) => ({ parts: i.parts, accent: i.tea.mixOnly })), packGrams);
   return pouchesCovered(items.map((i, k) => ({ grams: grams[k].grams, stock: i.tea.stock })));
+}
+
+/** Grams per pouch of each tea in a generated blend. */
+export function mixGrams(items: GeneratedItem[], packGrams: number): number[] {
+  return gramsPerPouch(items.map((i) => ({ parts: i.parts, accent: i.tea.mixOnly })), packGrams).map((g) => g.grams);
 }
 
 /** Gives the lead tea 2 parts and the others 1 part. */
@@ -109,17 +116,21 @@ export function generateMix(
   rules: RuleLike[],
   setting: MixSettingLike,
   input: GeneratorInput,
-  random: () => number = Math.random
+  random: () => number = Math.random,
+  /** A tea the blend must include, such as a mix-only tea a shopper picked. */
+  include?: PublicTea
 ): GeneratedItem[] | null {
   const size = Math.max(setting.minTeas, Math.min(setting.maxTeas, 3));
   // Skip teas that can't cover even one pouch: a side tea needs at least 1 of 4 parts, the lead 2 of 4.
+  // Mix-only teas go in as a small accent, so their last few grams are enough; they never lead.
   const has = (t: PublicTea, g: number) => t.stock == null || t.stock >= g;
   const pool = teas
+    .filter((t) => t.id !== include?.id)
     .filter((t) => allowedByCaffeine(t, input.caffeine === "full" ? "any" : input.caffeine))
-    .filter((t) => has(t, setting.packGrams / (size + 1)));
+    .filter((t) => t.mixOnly || has(t, setting.packGrams / (size + 1)));
   const leadPool = (
     input.caffeine === "full" ? pool.filter((t) => t.caffeineTier === "high" || t.caffeineTier === "medium") : pool
-  ).filter((t) => has(t, (setting.packGrams * 2) / (size + 1)));
+  ).filter((t) => !t.mixOnly && has(t, (setting.packGrams * 2) / (size + 1)) && (!include || fits(t, [include], rules)));
 
   for (let attempt = 0; attempt < 12; attempt++) {
     const lead = weightedPick(
@@ -128,7 +139,7 @@ export function generateMix(
       6
     );
     if (!lead) return null;
-    const chosen = [lead];
+    const chosen = include ? [lead, include] : [lead];
     while (chosen.length < size) {
       const next = weightedPick(
         pool.filter((t) => fits(t, chosen, rules)).map((t) => ({ item: t, score: score(t, input, lead) + random() * 1.5 })),
@@ -157,7 +168,7 @@ export function swapOptions(
   const lead = index === 0 ? undefined : current[0];
   const pref = input.caffeine === "full" ? "any" : input.caffeine;
   return teas
-    .filter((t) => t.id !== current[index].id && allowedByCaffeine(t, pref) && fits(t, others, rules))
+    .filter((t) => t.id !== current[index].id && !(index === 0 && t.mixOnly) && allowedByCaffeine(t, pref) && fits(t, others, rules))
     .map((t) => ({ t, s: score(t, input, lead) }))
     .sort((a, b) => b.s - a.s)
     .map((x) => x.t);

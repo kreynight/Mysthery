@@ -1,4 +1,4 @@
-import { isLowStock, isPremiumOrigin, teaOffer, type TeaOffer } from "@/lib/pricing";
+import { isLowStock, isMixOnly, isPremiumOrigin, teaOffer, type TeaOffer } from "@/lib/pricing";
 // Shared logic for the public tea library and the "make your own mix" builder.
 // Safe to import from client components: no database access here.
 
@@ -82,8 +82,10 @@ export interface PublicTea {
   harsh: boolean;
   /** Low stock or marked rare: blends that use it cost a little more. */
   rare: boolean;
-  /** What a single pouch of this tea sells for, or null when too little is left. */
+  /** What a single pouch of this tea sells for, or null when too little is left to sell it alone. */
   offer: TeaOffer | null;
+  /** Down to its last few grams: shown in the shop, but sold only as a small accent in a mix. */
+  mixOnly: boolean;
   /** Grams on hand, or null when not counted. Mixes never use more than this. */
   stock: number | null;
   /** Where the tea comes from, as a short country name, or null when the record doesn't say. */
@@ -227,6 +229,7 @@ export function toPublicTea(ing: RawIngredient & { id: string; inventoryNo: numb
     harsh,
     rare: !!ing.rare || isLowStock(ing.gramsOnHand),
     stock: ing.gramsOnHand ?? null,
+    mixOnly: isMixOnly(ing.gramsOnHand),
     country: countryOf(ing.culturalRoots) ?? brandCountry(ing.brand),
     offer: teaOffer({
       gramsOnHand: ing.gramsOnHand ?? null,
@@ -305,6 +308,9 @@ export function validateMix(teas: PublicTea[], rules: RuleLike[], setting: MixSe
   for (const t of teas) {
     if (!isMixable(t, rules)) return `${t.name} isn't available for mixing.`;
   }
+  const mixOnly = teas.filter((t) => t.mixOnly);
+  if (mixOnly.length > 1) return `${mixOnly[0].name} and ${mixOnly[1].name} are both down to their last few grams. A mix can hold one of them.`;
+  if (mixOnly.length && mixOnly.length === teas.length) return `${mixOnly[0].name} needs other teas to carry the blend.`;
   for (let i = 0; i < teas.length; i++) {
     for (let j = i + 1; j < teas.length; j++) {
       const r = blockingRule(teas[i], teas[j], rules);

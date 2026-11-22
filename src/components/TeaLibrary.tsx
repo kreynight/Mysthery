@@ -214,9 +214,16 @@ function TeaCard({ tea }: { tea: PublicTea }) {
         </p>
         <p className="mt-1.5 flex flex-wrap gap-1">
           {tea.country && <Badge tone="outline">{tea.country}</Badge>}
-          {!offer && <Badge tone="muted">Sold out</Badge>}
+          {!offer && tea.mixOnly && <Badge tone="warm">Mix only</Badge>}
+          {!offer && !tea.mixOnly && <Badge tone="muted">Sold out</Badge>}
           {offer?.rare && <Badge tone="warm">Rare</Badge>}
         </p>
+        {!offer && tea.mixOnly && (
+          <p className="text-xs text-[#5b4532] mt-1.5">
+            Last few grams. Available only in a Mysthérie mix.{" "}
+            <Link href="/#mix" className="underline underline-offset-2">Make a mix</Link>
+          </p>
+        )}
       </div>
       {offer && (
         <TeaBuyButton

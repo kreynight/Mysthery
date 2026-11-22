@@ -7,6 +7,7 @@ import { addMix } from "@/lib/cart";
 import type { MixSettingLike, PublicTea, RuleLike } from "@/lib/mix";
 import {
   generateMix,
+  mixGrams,
   mixPouchesInStock,
   mixName,
   mixSummary,
@@ -125,12 +126,13 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
   useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
 
   const isSpinning = spinning.some(Boolean);
+  const pullRef = useRef<(include?: PublicTea) => void>(() => {});
 
-  const pull = useCallback(() => {
+  const pull = useCallback((include?: PublicTea) => {
     if (isSpinning) return;
     timers.current.forEach((t) => window.clearTimeout(t));
     timers.current = [];
-    const mix = generateMix(teas, rules, setting, input);
+    const mix = generateMix(teas, rules, setting, input, Math.random, include);
     if (!mix) {
       setNoMatch(true);
       setItems(null);
@@ -171,6 +173,19 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSpinning, teas, rules, setting, taste, feel, caffeine]);
 
+  // "Blend it" on a mix-only tea in the shop pulls a blend with that tea inside.
+  useEffect(() => {
+    pullRef.current = pull;
+  }, [pull]);
+  useEffect(() => {
+    const onBlend = (e: Event) => {
+      const tea = teas.find((t) => t.id === (e as CustomEvent<string>).detail);
+      if (tea) pullRef.current(tea);
+    };
+    window.addEventListener("mystherie:blend-with", onBlend);
+    return () => window.removeEventListener("mystherie:blend-with", onBlend);
+  }, [teas]);
+
   const [added, setAdded] = useState(false);
   const addToCart = () => {
     if (!items) return;
@@ -186,7 +201,7 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
   };
 
   const finals = [0, 1, 2].map((i) => (items && items[i] ? reelWord(items[i].tea) : i === 2 && items ? "Pure" : "?"));
-  const totalParts = items ? items.reduce((s, i) => s + i.parts, 0) : 1;
+  const grams = items ? mixGrams(items, setting.packGrams) : [];
   const toggle = <T,>(v: T | null, k: T, set: (x: T | null) => void) => set(v === k ? null : k);
 
   return (
@@ -227,7 +242,7 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
         </div>
         <button
           type="button"
-          onClick={pull}
+          onClick={() => pull()}
           disabled={isSpinning}
           className="mt-4 w-full rounded-full bg-[#d9c3a5] text-[#2b3a28] py-3.5 text-sm font-semibold tracking-widest uppercase hover:bg-[#e5cfae] transition-colors disabled:opacity-70"
         >
@@ -238,7 +253,7 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
         <button
           type="button"
           aria-label="Pull the lever"
-          onClick={pull}
+          onClick={() => pull()}
           disabled={isSpinning}
           className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-36 flex flex-col items-center justify-center"
         >
@@ -273,13 +288,17 @@ export default function MixGenerator({ teas, rules, setting }: Props) {
           )}
 
           <ul className="mt-4 space-y-1.5">
-            {items.map(({ tea, parts }) => (
+            {items.map(({ tea }, k) => (
               <li key={tea.id} className="flex items-center gap-3 text-sm">
                 <span className="w-10 shrink-0 text-xs font-semibold text-[#7a5a3c]">
-                  {Math.round((parts / totalParts) * 100)}%
+                  {Math.round((grams[k] / setting.packGrams) * 100)}%
                 </span>
                 <span className="min-w-0 truncate text-[#2b3a28]">{tea.name}</span>
-                {tea.rare && (
+                {tea.mixOnly ? (
+                  <span className="shrink-0 text-[9px] tracking-wider uppercase text-[#7a5a3c] border border-[#7a5a3c]/40 rounded-full px-1.5 py-0.5">
+                    Last few grams
+                  </span>
+                ) : tea.rare && (
                   <span className="shrink-0 text-[9px] tracking-wider uppercase text-[#7a5a3c] border border-[#7a5a3c]/40 rounded-full px-1.5 py-0.5">
                     Rare
                   </span>

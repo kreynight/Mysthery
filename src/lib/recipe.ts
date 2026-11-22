@@ -1,9 +1,13 @@
 // Blend recipes: what goes in a pouch, in parts and grams. Safe to import from client components.
 
+import { ACCENT_GRAMS } from "@/lib/pricing";
+
 export interface RecipeItem {
   ingredientId: string;
   name: string;
   parts: number;
+  /** A mix-only tea: a fixed small accent in each pouch instead of a share by parts. */
+  accent?: boolean;
 }
 
 export interface RecipeLine {
@@ -27,15 +31,19 @@ export interface OrderRecipe {
 const roundHalf = (n: number) => Math.round(n * 2) / 2;
 
 export function buildOrderRecipe(
-  items: Omit<RecipeLine, "grams">[],
+  items: (Omit<RecipeLine, "grams"> & { accent?: boolean })[],
   packGrams: number,
   pouches: number
 ): OrderRecipe {
-  const total = items.reduce((s, i) => s + i.parts, 0) || 1;
+  const grams = gramsPerPouch(items, packGrams);
   return {
     packGrams,
     pouches,
-    lines: items.map((i) => ({ ...i, grams: roundHalf((packGrams * i.parts) / total) })),
+    lines: items.map((i, k) => {
+      const line: RecipeLine & { accent?: boolean } = { ...i, grams: grams[k].grams };
+      delete line.accent;
+      return line;
+    }),
   };
 }
 
@@ -109,8 +117,18 @@ export function pouchesCovered(lines: { grams: number; stock: number | null }[])
   return Math.max(0, n);
 }
 
-/** Grams per pouch for each tea in a recipe of parts. */
-export function gramsPerPouch(items: { ingredientId?: string; parts: number }[], packGrams: number) {
-  const total = items.reduce((s, i) => s + i.parts, 0) || 1;
-  return items.map((i) => ({ ingredientId: i.ingredientId, grams: roundHalf((packGrams * i.parts) / total) }));
+/**
+ * Grams per pouch for each tea in a recipe of parts. An accent (mix-only) tea gets ACCENT_GRAMS and the
+ * other teas share the rest by parts. With no other tea to carry the pouch, accents fall back to parts.
+ */
+export function gramsPerPouch(items: { ingredientId?: string; parts: number; accent?: boolean }[], packGrams: number) {
+  const accents = items.filter((i) => i.accent).length;
+  const useAccent = accents > 0 && accents < items.length;
+  const share = items.filter((i) => !useAccent || !i.accent);
+  const total = share.reduce((s, i) => s + i.parts, 0) || 1;
+  const rest = useAccent ? packGrams - ACCENT_GRAMS * accents : packGrams;
+  return items.map((i) => ({
+    ingredientId: i.ingredientId,
+    grams: useAccent && i.accent ? ACCENT_GRAMS : roundHalf((rest * i.parts) / total),
+  }));
 }
