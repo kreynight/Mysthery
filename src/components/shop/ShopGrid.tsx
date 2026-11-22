@@ -17,7 +17,68 @@ function price(cents: number) {
   return formatPrice(cents).replace(".00", "");
 }
 
+/** Sends a mix-only tea to the blend machine, which pulls a mix with it inside. */
+export function blendWith(teaId: string) {
+  window.dispatchEvent(new CustomEvent("mystherie:blend-with", { detail: teaId }));
+  document.getElementById("mix")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function Card({ tea, priority }: { tea: ShopTea; priority: boolean }) {
+  if (!tea.offer) return <MixOnlyCard tea={tea} priority={priority} />;
+  return <SingleCard tea={tea} priority={priority} />;
+}
+
+function Photo({ tea, priority }: { tea: ShopTea; priority: boolean }) {
+  return (
+    <Image
+      src={tea.photo.src}
+      alt={tea.photo.own ? tea.name : ""}
+      fill
+      priority={priority}
+      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
+      className="object-cover transition-transform duration-700 group-hover:scale-105"
+      style={{ objectPosition: tea.photo.position }}
+    />
+  );
+}
+
+/** A tea down to its last few grams: shown with a note, and offered only inside a mix. */
+function MixOnlyCard({ tea, priority }: { tea: ShopTea; priority: boolean }) {
+  return (
+    <article className="group flex flex-col">
+      <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-[#dfe6d3]">
+        <Photo tea={tea} priority={priority} />
+        <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+          <span className="rounded-full bg-[#7a5a3c] text-[#fbf6ef] text-[9.5px] tracking-wider uppercase px-2 py-1">Mix only</span>
+        </div>
+        {tea.country && (
+          <span className="absolute top-2 right-2 rounded-full bg-[#fbf6ef]/90 p-0.5 shadow-sm" title={tea.country}>
+            <Flag country={tea.country} size={22} className="block rounded-full" />
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={() => blendWith(tea.id)}
+          aria-label={`Blend ${tea.name} into a Mysthérie mix`}
+          className="absolute bottom-2 right-2 h-10 min-w-10 px-3 rounded-full bg-[#fbf6ef] text-[#2b3a28] text-xs font-semibold tracking-wide shadow-md ring-1 ring-[#2b3a28]/20 hover:bg-white transition-colors"
+        >
+          Blend it
+        </button>
+      </div>
+      <div className="pt-2.5 px-0.5">
+        <h3 className="text-[15px] leading-snug text-[#2b3a28] font-medium">{tea.name}</h3>
+        <p className="text-xs text-stone-500 mt-0.5 line-clamp-1">
+          {[tea.category, tea.note].filter(Boolean).join(" · ") || FAMILIES[tea.family]?.label}
+        </p>
+        <p className="text-[12px] leading-snug text-[#5b4532] mt-1">{MIX_ONLY_NOTE}</p>
+      </div>
+    </article>
+  );
+}
+
+export const MIX_ONLY_NOTE = "Last few grams. Available only in a Mysthérie mix.";
+
+function SingleCard({ tea, priority }: { tea: ShopTea; priority: boolean }) {
   const offer = tea.offer!;
   const [added, setAdded] = useState(false);
   const label = offer.tasting ? `${offer.grams} g tasting pouch` : "1 oz pouch";
@@ -29,15 +90,7 @@ function Card({ tea, priority }: { tea: ShopTea; priority: boolean }) {
   return (
     <article className="group flex flex-col">
       <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-[#dfe6d3]">
-        <Image
-          src={tea.photo.src}
-          alt={tea.photo.own ? tea.name : ""}
-          fill
-          priority={priority}
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
-          style={{ objectPosition: tea.photo.position }}
-        />
+        <Photo tea={tea} priority={priority} />
         <div className="absolute top-2 left-2 flex flex-wrap gap-1">
           {offer.rare && <span className="rounded-full bg-[#7a5a3c] text-[#fbf6ef] text-[9.5px] tracking-wider uppercase px-2 py-1">Rare</span>}
           {offer.tasting && <span className="rounded-full bg-[#fbf6ef]/90 text-[#5b4532] text-[9.5px] tracking-wider uppercase px-2 py-1">Tasting size</span>}

@@ -72,6 +72,10 @@ export const RARE_BLEND_EXTRA = 400;
 export const VERY_RARE_TASTING_EXTRA = 600;
 /** No tasting pouch sells for less than this, however small. */
 export const TASTING_MIN_PRICE = 800;
+/** At this many grams on hand or fewer, a tea is sold only inside a Mystherie mix, never on its own. */
+export const MIX_ONLY_GRAMS = 5;
+/** Grams of a mix-only tea in one mix pouch: a small accent, with the other teas making up the rest. */
+export const ACCENT_GRAMS = 2.5;
 
 export interface TeaOffer {
   grams: number;
@@ -87,12 +91,19 @@ export function isPremiumOrigin(roots: string | null | undefined): boolean {
   return /haiti|china|chinese|yunnan/.test(r) && !/france/.test(r);
 }
 
+/** True when a tea is down to its last few grams: shown, but sold only as part of a mix. */
+export function isMixOnly(gramsOnHand: number | null | undefined): boolean {
+  return gramsOnHand != null && gramsOnHand >= ACCENT_GRAMS && gramsOnHand <= MIX_ONLY_GRAMS;
+}
+
 export function isLowStock(gramsOnHand: number | null | undefined): boolean {
   return gramsOnHand != null && gramsOnHand < LOW_STOCK_GRAMS;
 }
 
-/** What one pouch of a library tea costs and weighs. Null when there is too little left to sell. */
+/** What one pouch of a library tea costs and weighs. Null when there is too little left to sell on its own. */
 export function teaOffer(t: { gramsOnHand: number | null; rare: boolean; premium: boolean }): TeaOffer | null {
+  // At 5 g or less a tea is never sold alone (mix only, see isMixOnly).
+  if (t.gramsOnHand != null && t.gramsOnHand <= MIX_ONLY_GRAMS) return null;
   const lowStock = isLowStock(t.gramsOnHand);
   const rare = t.rare || lowStock;
   if (lowStock) {

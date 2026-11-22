@@ -78,7 +78,8 @@ export default async function Home() {
     teas = [];
   }
   const mixable = teas.filter((t) => isMixable(t, rules));
-  const forSale: ShopTea[] = interleave(teas.filter((t) => t.offer)).map((t) => ({ ...t, photo: teaPhoto(t) }));
+  // Mix-only teas (last few grams) still show, with a note, as long as they can go in a mix.
+  const forSale: ShopTea[] = interleave(teas.filter((t) => t.offer || (t.mixOnly && isMixable(t, rules)))).map((t) => ({ ...t, photo: teaPhoto(t) }));
   const origins = FLAG_COUNTRIES.filter((c) => forSale.some((t) => t.country === c)).sort((a, b) =>
     (a === "UK" ? "England" : a).localeCompare(b === "UK" ? "England" : b)
   );

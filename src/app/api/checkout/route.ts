@@ -16,6 +16,9 @@ import { validateMix } from "@/lib/mix";
 import { parseRecipeItems, recipeText, type OrderRecipe, type RecipeLine } from "@/lib/recipe";
 import { parseSize, priceTiers, shippingFor, shippingOption, sizeLabel, withRare, type PackSize } from "@/lib/pricing";
 
+const MIX_ONLY_ERROR = (name: string) =>
+  `${name} is down to its last few grams, so it's only sold inside a Mysthérie mix. Remove it and blend it into a mix instead.`;
+
 /** Accepts ["id", ...] (older pages) or [{ id, parts }, ...]. Parts are 1 to 3. */
 function parseMix(mix: unknown): { id: string; parts: number }[] | null {
   if (!Array.isArray(mix) || mix.length === 0 || mix.length > 10) return null;
@@ -44,7 +47,7 @@ async function mixCheckout(req: NextRequest, mix: unknown, size: PackSize) {
   if (problem) return NextResponse.json({ error: problem }, { status: 400 });
 
   const recipe = await snapshotRecipe(
-    chosen.map((t, i) => ({ ingredientId: t.id, name: t.name, parts: wanted[i].parts })),
+    chosen.map((t, i) => ({ ingredientId: t.id, name: t.name, parts: wanted[i].parts, accent: t.mixOnly })),
     setting.packGrams,
     size
   );
@@ -107,6 +110,7 @@ async function teaCheckout(req: NextRequest, teaId: unknown) {
   if (typeof teaId !== "string") return NextResponse.json({ error: "Invalid tea." }, { status: 400 });
   const teas = await getPublicTeas();
   const tea = teas.find((t) => t.id === teaId);
+  if (tea?.mixOnly) return NextResponse.json({ error: MIX_ONLY_ERROR(tea.name) }, { status: 400 });
   if (!tea || !tea.offer) {
     return NextResponse.json({ error: "That tea just sold out." }, { status: 400 });
   }
@@ -213,6 +217,7 @@ async function cartCheckout(req: NextRequest, value: unknown) {
   for (const item of cart) {
     if (item.type === "tea") {
       const tea = byId.get(item.id);
+      if (tea?.mixOnly) return NextResponse.json({ error: MIX_ONLY_ERROR(tea.name) }, { status: 400 });
       if (!tea || !tea.offer) {
         return NextResponse.json({ error: `${tea?.name || "One of your teas"} just sold out. Remove it to continue.` }, { status: 400 });
       }
@@ -239,7 +244,7 @@ async function cartCheckout(req: NextRequest, value: unknown) {
       if (problem) return NextResponse.json({ error: problem }, { status: 400 });
       const count = item.size * item.qty;
       const recipe = await snapshotRecipe(
-        chosen.map((t, i) => ({ ingredientId: t.id, name: t.name, parts: item.mix[i].parts })),
+        chosen.map((t, i) => ({ ingredientId: t.id, name: t.name, parts: item.mix[i].parts, accent: t.mixOnly })),
         setting.packGrams,
         count
       );
