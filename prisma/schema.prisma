@@ -52,7 +52,8 @@ model Order {
   status          String   @default("pending") // pending, paid, failed, review, refunded
   totalAmount     Int      // cents
   shippingAddress Json?    // where it ships: { name, line1, line2, city, state, postalCode, country, phone }
-  shippoOrderId   String?  // the order's id in Shippo, once sent there
+  shippoOrderId   String?  // the order's id in Shippo, once sent there ("sending" while it's being sent)
+  paidAt          DateTime? // when payment came in; it goes to Shippo after the hold
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

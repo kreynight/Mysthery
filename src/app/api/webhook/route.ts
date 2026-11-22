@@ -5,9 +5,8 @@ import Stripe from "stripe";
 import { getStockMap, orderFitsStock, returnToStock, takeFromStock } from "@/lib/teas";
 import { parseOrderRecipe } from "@/lib/recipe";
 import { sendOrderConfirmation } from "@/lib/email";
-import { createShippoOrder, orderContents, parcelGrams, shipToFromSession } from "@/lib/shippo";
-import { shippingFor } from "@/lib/pricing";
-import type { OrderRecipe } from "@/lib/recipe";
+import { shipToFromSession } from "@/lib/shippo";
+import { onOrderPaid, onOrderRefunded } from "@/lib/fulfil";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -35,6 +34,7 @@ export async function POST(req: NextRequest) {
     const shipTo = shipToFromSession(session);
     const paidFields = {
       ...(shipTo ? { shippingAddress: { ...shipTo } } : {}),
+      paidAt: new Date(),
       email: session.customer_details?.email || null,
       stripePaymentId: (session.payment_intent as string) || null,
       // What was actually charged, after any promo code.
@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
         // Paid but the shelf can't cover it: hold for review instead of counting stock down.
         await prisma.order.update({ where: { stripeSessionId: session.id }, data: { status: "review", ...paidFields } });
         console.error(`Not enough stock for session ${session.id}. Order marked for review.`);
+        await onOrderPaid(order.id);
         return NextResponse.json({ received: true });
       }
 
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest) {
       }
       if (recipe) await takeFromStock(recipe);
       await sendConfirmation(session);
-      await sendToShippo(session, order.id, recipe, quantity);
+      await onOrderPaid(order.id);
     } catch (err) {
       console.error("Error processing webhook:", err);
       return NextResponse.json({ error: "Processing error." }, { status: 500 });
@@ -129,6 +130,7 @@ async function handleRefund(charge: Stripe.Charge) {
     data: { status: "refunded", stripePaymentId: paymentId },
   });
   if (claimed.count === 0) return;
+  await onOrderRefunded(order.id);
 
   // Only a paid order took stock off, so only a paid order puts it back.
   if (order.status !== "paid") return;
@@ -160,34 +162,3 @@ async function sendConfirmation(session: Stripe.Checkout.Session) {
   }
 }
 
-/** Puts a paid order in Shippo, ready for a label. Any failure is logged, never thrown. */
-async function sendToShippo(session: Stripe.Checkout.Session, orderId: string, recipe: OrderRecipe | null, quantity: number) {
-  if (!process.env.SHIPPO_API_TOKEN) return;
-  const shipTo = shipToFromSession(session);
-  if (!shipTo) {
-    console.error(`No shipping address on session ${session.id}; not sent to Shippo.`);
-    return;
-  }
-  try {
-    const items = await getStripe().checkout.sessions.listLineItems(session.id, { limit: 20 });
-    const { pouches, teaGrams } = orderContents(recipe, quantity);
-    const shippingCents = session.total_details?.amount_shipping ?? shippingFor(pouches);
-    const shippoId = await createShippoOrder({
-      orderNumber: orderId.slice(0, 8).toUpperCase(),
-      placedAt: new Date((session.created || Date.now() / 1000) * 1000),
-      email: session.customer_details?.email || null,
-      shipTo,
-      lines: items.data.map((i) => ({
-        title: i.description || "Tea",
-        quantity: i.quantity || 1,
-        totalCents: i.amount_total ?? 0,
-      })),
-      shippingCents,
-      totalCents: session.amount_total ?? 0,
-      grams: parcelGrams(pouches, teaGrams),
-    });
-    if (shippoId) await prisma.order.update({ where: { id: orderId }, data: { shippoOrderId: shippoId } });
-  } catch (err) {
-    console.error("Sending order to Shippo failed:", err);
-  }
-}

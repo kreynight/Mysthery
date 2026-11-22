@@ -23,7 +23,7 @@ function ShipToLine({ order }: { order: Order }) {
       <span className="text-stone-400">Ship to: </span>
       {a.name ? `${a.name}, ` : ""}
       {place}
-      <span className="ml-2 text-stone-400">{order.shippoOrderId ? "In Shippo" : "Not in Shippo"}</span>
+      <span className="ml-2 text-stone-400">{order.shippoOrderId && order.shippoOrderId !== "sending" ? "In Shippo" : order.status === "paid" ? "Goes to Shippo an hour after payment" : "Not sent to Shippo"}</span>
     </p>
   );
 }
