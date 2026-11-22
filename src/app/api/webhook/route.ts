@@ -5,6 +5,9 @@ import Stripe from "stripe";
 import { getStockMap, orderFitsStock, returnToStock, takeFromStock } from "@/lib/teas";
 import { parseOrderRecipe } from "@/lib/recipe";
 import { sendOrderConfirmation } from "@/lib/email";
+import { createShippoOrder, orderContents, parcelGrams, shipToFromSession } from "@/lib/shippo";
+import { shippingFor } from "@/lib/pricing";
+import type { OrderRecipe } from "@/lib/recipe";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -29,7 +32,9 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
+    const shipTo = shipToFromSession(session);
     const paidFields = {
+      ...(shipTo ? { shippingAddress: { ...shipTo } } : {}),
       email: session.customer_details?.email || null,
       stripePaymentId: (session.payment_intent as string) || null,
       // What was actually charged, after any promo code.
@@ -39,7 +44,7 @@ export async function POST(req: NextRequest) {
     try {
       const order = await prisma.order.findUnique({
         where: { stripeSessionId: session.id },
-        select: { status: true, recipe: true },
+        select: { id: true, status: true, recipe: true },
       });
       if (!order) {
         console.error(`No order for session ${session.id}`);
@@ -77,6 +82,7 @@ export async function POST(req: NextRequest) {
       }
       if (recipe) await takeFromStock(recipe);
       await sendConfirmation(session);
+      await sendToShippo(session, order.id, recipe, quantity);
     } catch (err) {
       console.error("Error processing webhook:", err);
       return NextResponse.json({ error: "Processing error." }, { status: 500 });
@@ -151,5 +157,37 @@ async function sendConfirmation(session: Stripe.Checkout.Session) {
     });
   } catch (err) {
     console.error("Confirmation email failed:", err);
+  }
+}
+
+/** Puts a paid order in Shippo, ready for a label. Any failure is logged, never thrown. */
+async function sendToShippo(session: Stripe.Checkout.Session, orderId: string, recipe: OrderRecipe | null, quantity: number) {
+  if (!process.env.SHIPPO_API_TOKEN) return;
+  const shipTo = shipToFromSession(session);
+  if (!shipTo) {
+    console.error(`No shipping address on session ${session.id}; not sent to Shippo.`);
+    return;
+  }
+  try {
+    const items = await getStripe().checkout.sessions.listLineItems(session.id, { limit: 20 });
+    const { pouches, teaGrams } = orderContents(recipe, quantity);
+    const shippingCents = session.total_details?.amount_shipping ?? shippingFor(pouches);
+    const shippoId = await createShippoOrder({
+      orderNumber: orderId.slice(0, 8).toUpperCase(),
+      placedAt: new Date((session.created || Date.now() / 1000) * 1000),
+      email: session.customer_details?.email || null,
+      shipTo,
+      lines: items.data.map((i) => ({
+        title: i.description || "Tea",
+        quantity: i.quantity || 1,
+        totalCents: i.amount_total ?? 0,
+      })),
+      shippingCents,
+      totalCents: session.amount_total ?? 0,
+      grams: parcelGrams(pouches, teaGrams),
+    });
+    if (shippoId) await prisma.order.update({ where: { id: orderId }, data: { shippoOrderId: shippoId } });
+  } catch (err) {
+    console.error("Sending order to Shippo failed:", err);
   }
 }

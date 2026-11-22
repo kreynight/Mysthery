@@ -4,6 +4,30 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { OrderRecipe } from "@/lib/recipe";
 
+interface ShipTo {
+  name: string | null;
+  line1: string | null;
+  line2: string | null;
+  city: string | null;
+  state: string | null;
+  postalCode: string | null;
+  country: string | null;
+}
+
+function ShipToLine({ order }: { order: Order }) {
+  const a = order.shippingAddress;
+  if (!a) return null;
+  const place = [a.line1, a.line2, [a.city, a.state].filter(Boolean).join(", "), a.postalCode].filter(Boolean).join(", ");
+  return (
+    <p className="mt-2 text-xs text-stone-500">
+      <span className="text-stone-400">Ship to: </span>
+      {a.name ? `${a.name}, ` : ""}
+      {place}
+      <span className="ml-2 text-stone-400">{order.shippoOrderId ? "In Shippo" : "Not in Shippo"}</span>
+    </p>
+  );
+}
+
 interface Order {
   id: string;
   dropId: string | null;
@@ -15,6 +39,8 @@ interface Order {
   stripePaymentId: string | null;
   status: string;
   totalAmount: number;
+  shippingAddress: ShipTo | null;
+  shippoOrderId: string | null;
   createdAt: string;
   blend: OrderRecipe | null;
   blendSource: "order" | "batch" | "names" | "none";
@@ -162,6 +188,7 @@ export default function AdminOrdersPage() {
                   {order.id.slice(0, 8)}...
                 </div>
               </div>
+              <ShipToLine order={order} />
               <BlendCard order={order} />
             </div>
           ))}
