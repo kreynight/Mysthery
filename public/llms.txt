@@ -27,7 +27,7 @@ Mystherie is a specialty tea brand offering limited-batch mystery tea collection
 
 - **Mystery Collections**: Limited-run tea blends with undisclosed recipes. General profile (flavor, effect, caffeine) is shared; exact ingredients are the surprise.
 - **Batch Model**: Each collection has a fixed quantity (typically 10-30 units). Once sold out, that blend is retired.
-- **Ingredient Library**: Blends draw from 45+ curated ingredients spanning Chinese pu-erh, Japanese green teas, Indian and British black teas, European blends, herbals, and more.
+- **Ingredient Library**: Blends draw from 45+ curated ingredients spanning Chinese pu-erh, Japanese green teas, Indian and British black teas, European blends, Haitian bush teas, and more.
 - **Transparency**: Caffeine status, allergen warnings, steep guides, and effect types are always disclosed.
 
 ## Contact
