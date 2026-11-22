@@ -11,8 +11,8 @@ export default function SuccessPage() {
         Thank you.
       </h1>
       <p className="text-sm text-stone-500 mb-8 leading-relaxed">
-        Your mystery tea is on its way. You&apos;ll receive a confirmation email from Stripe
-        with your receipt. We&apos;ll ship within 3-5 business days.
+        Your mystery tea is on its way. Your confirmation and receipt are headed to your inbox,
+        and we&apos;ll ship within 3-5 business days.
       </p>
       <Link
         href="/"

@@ -4,6 +4,7 @@ import { getStripe } from "@/lib/stripe";
 import Stripe from "stripe";
 import { getStockMap, orderFitsStock, returnToStock, takeFromStock } from "@/lib/teas";
 import { parseOrderRecipe } from "@/lib/recipe";
+import { sendOrderConfirmation } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
         await prisma.order.update({ where: { stripeSessionId: session.id }, data: { status: "paid", ...paidFields } });
       }
       if (recipe) await takeFromStock(recipe);
+      await sendConfirmation(session);
     } catch (err) {
       console.error("Error processing webhook:", err);
       return NextResponse.json({ error: "Processing error." }, { status: 500 });
@@ -134,3 +136,20 @@ async function handleRefund(charge: Stripe.Charge) {
   if (recipe) await returnToStock(recipe);
 }
 
+
+/** Emails the buyer their order confirmation. Any failure is logged, never thrown. */
+async function sendConfirmation(session: Stripe.Checkout.Session) {
+  const to = session.customer_details?.email;
+  if (!to || !process.env.RESEND_API_KEY) return;
+  try {
+    const items = await getStripe().checkout.sessions.listLineItems(session.id, { limit: 20 });
+    await sendOrderConfirmation({
+      to,
+      name: session.customer_details?.name,
+      lines: items.data.map((i) => ({ description: i.description || "Tea", quantity: i.quantity || 1 })),
+      totalCents: session.amount_total ?? 0,
+    });
+  } catch (err) {
+    console.error("Confirmation email failed:", err);
+  }
+}
